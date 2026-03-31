@@ -1,0 +1,14 @@
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-3 w-[320px] max-w-[calc(100vw-2rem)] pointer-events-none">
+  <div
+    *ngFor="let toast of toastService.toasts(); trackBy: trackByToastId"
+    class="pointer-events-auto rounded-xl shadow-lg px-4 py-3 flex items-start justify-between gap-3"
+    [ngClass]="getToastClasses(toast.type)">
+    <p class="text-sm leading-5">{{ toast.message }}</p>
+    <button
+      type="button"
+      class="text-white/80 hover:text-white text-xs"
+      (click)="toastService.dismiss(toast.id)">
+      ✕
+    </button>
+  </div>
+</div>

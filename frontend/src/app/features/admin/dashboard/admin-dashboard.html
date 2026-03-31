@@ -1,0 +1,49 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Top Navigation -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-gray-800">Rentify</h1>
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Admin</span>
+      </div>
+      
+      <div class="flex items-center gap-6">
+        <span class="text-sm text-gray-600">Welcome, Admin</span>
+        <button 
+          (click)="logout()"
+          class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-2xl transition">
+          Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">Admin Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div class="bg-white p-6 rounded-3xl shadow">
+        <p class="text-gray-500 text-sm">Total Tenants</p>
+        <p class="text-4xl font-bold text-blue-600 mt-2">324</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl shadow">
+        <p class="text-gray-500 text-sm">Active Landlords</p>
+        <p class="text-4xl font-bold text-green-600 mt-2">87</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl shadow">
+        <p class="text-gray-500 text-sm">Total Properties</p>
+        <p class="text-4xl font-bold text-purple-600 mt-2">156</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl shadow">
+        <p class="text-gray-500 text-sm">Pending Applications</p>
+        <p class="text-4xl font-bold text-orange-600 mt-2">23</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow p-8">
+      <h2 class="text-xl font-semibold mb-6">System Overview</h2>
+      <p class="text-gray-600">You have full access to manage landlords, tenants, properties, billing, and generate reports.</p>
+    </div>
+  </div>
+</div>
