@@ -1,0 +1,20 @@
+# Supabase
+supabase/.env
+supabase/config.toml
+
+# Node.js
+node_modules/
+.env
+dist/
+build/
+
+# Angular
+frontend/.angular/
+frontend/node_modules/
+
+# Backend
+backend/node_modules/
+backend/dist/
+
+# Logs
+*.log
