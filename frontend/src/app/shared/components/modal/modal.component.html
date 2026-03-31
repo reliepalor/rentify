@@ -1,0 +1,33 @@
+<div *ngIf="modalService.state().isOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <button
+    type="button"
+    aria-label="Close modal"
+    class="absolute inset-0 bg-black/45"
+    (click)="close()"></button>
+
+  <div
+    class="relative w-full max-w-md rounded-2xl border bg-white p-6 shadow-2xl"
+    [ngClass]="getContainerClasses(modalService.state().type)">
+    <div class="flex items-start gap-4">
+      <div
+        class="h-9 w-9 shrink-0 rounded-full text-base font-bold flex items-center justify-center"
+        [ngClass]="getIconClasses(modalService.state().type)">
+        {{ getIcon(modalService.state().type) }}
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <h3 class="text-lg font-semibold text-slate-900">{{ modalService.state().title }}</h3>
+        <p class="mt-1 text-sm text-slate-600">{{ modalService.state().message }}</p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <button
+        type="button"
+        class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        (click)="close()">
+        {{ modalService.state().confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

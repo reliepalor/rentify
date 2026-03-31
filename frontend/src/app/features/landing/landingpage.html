@@ -1,57 +1,193 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-  <div class="max-w-4xl mx-auto px-6 text-center text-white">
-    
-    <!-- Hero Section -->
-    <div class="mb-12">
-      <h1 class="text-6xl font-bold mb-6 tracking-tight">
-        Rentify
-      </h1>
-      <p class="text-2xl font-light mb-4">
-        Smart Boarding House Management System
-      </p>
-      <p class="text-xl text-blue-100 max-w-2xl mx-auto">
-        Connecting landlords and tenants with seamless billing, payments, 
-        and tenant reporting.
-      </p>
-    </div>
+<div class="landing-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="content-wrapper">
+      <div [class.fade-in]="isLoaded" class="hero-content">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Smart Property Management
+        </div>
+        
+        <h1 class="hero-title">
+          Find Your Perfect
+          <span class="gradient-text">Boarding Space</span>
+        </h1>
+        
+        <p class="hero-subtitle">
+          Modern platform connecting landlords and tenants with automated billing,
+          seamless payments, and transparent reporting.
+        </p>
 
-    <!-- Features Highlights -->
-    <div class="grid md:grid-cols-3 gap-8 mb-16">
-      <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
-        <div class="text-4xl mb-4">🏠</div>
-        <h3 class="text-xl font-semibold mb-2">Property Management</h3>
-        <p class="text-blue-100">Easy listing and management of boarding houses and rooms</p>
+        <div class="cta-buttons">
+          <button (click)="goToRegister()" class="btn-primary">
+            <span>List Your Property</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button (click)="goToLogin()" class="btn-secondary">
+            Sign In
+          </button>
+        </div>
+
+        <div class="trust-indicators">
+          <div class="indicator">
+            <span class="number">500+</span>
+            <span class="label">Properties</span>
+          </div>
+          <div class="divider"></div>
+          <div class="indicator">
+            <span class="number">2,000+</span>
+            <span class="label">Happy Tenants</span>
+          </div>
+          <div class="divider"></div>
+          <div class="indicator">
+            <span class="number">98%</span>
+            <span class="label">Satisfaction</span>
+          </div>
+        </div>
       </div>
-      <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
-        <div class="text-4xl mb-4">💰</div>
-        <h3 class="text-xl font-semibold mb-2">Integrated Billing</h3>
-        <p class="text-blue-100">Automated rent, utilities, and payment tracking</p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
-        <div class="text-4xl mb-4">📊</div>
-        <h3 class="text-xl font-semibold mb-2">Tenant Reports</h3>
-        <p class="text-blue-100">Complete payment history and behavior analytics</p>
+
+      <!-- Floating Cards -->
+      <div class="hero-visual">
+        <div class="floating-card card-1">
+          <div class="card-icon">🏠</div>
+          <div class="card-content">
+            <div class="card-title">Modern Rooms</div>
+            <div class="card-subtitle">₱8,000/month</div>
+          </div>
+          <div class="card-status">Available</div>
+        </div>
+
+        <div class="floating-card card-2">
+          <div class="card-icon">✓</div>
+          <div class="card-content">
+            <div class="card-title">Payment Received</div>
+            <div class="card-subtitle">Jan 2026 Rent</div>
+          </div>
+        </div>
+
+        <div class="floating-card card-3">
+          <div class="stat-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="percentage">85%</div>
+          </div>
+          <div class="stat-label">Occupancy Rate</div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <button 
-        (click)="goToLogin()"
-        class="px-10 py-4 bg-white text-blue-700 font-semibold rounded-2xl text-lg hover:bg-blue-50 transition-all duration-300 shadow-lg">
-        Login
-      </button>
-      
-      <button 
-        (click)="goToRegister()"
-        class="px-10 py-4 bg-transparent border-2 border-white font-semibold rounded-2xl text-lg hover:bg-white/10 transition-all duration-300">
-        Register as Landlord
-      </button>
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="content-wrapper">
+      <div class="section-header">
+        <span class="section-tag">Features</span>
+        <h2 class="section-title">Everything you need in one place</h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+              <path d="M9 3v18M3 9h18M3 15h18" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Property Listings</h3>
+          <p class="feature-description">Manage multiple properties and rooms with detailed profiles and photo galleries</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2"/>
+              <path d="M2 10h20" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Automated Billing</h3>
+          <p class="feature-description">Generate rent and utility bills automatically with payment reminders</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Payment Tracking</h3>
+          <p class="feature-description">Real-time payment status and complete transaction history</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 3v18h18" stroke-width="2"/>
+              <path d="M18 17l-4-4-4 4-4-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Analytics & Reports</h3>
+          <p class="feature-description">Comprehensive insights on occupancy, revenue, and tenant behavior</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/>
+              <circle cx="9" cy="7" r="4" stroke-width="2"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Tenant Profiles</h3>
+          <p class="feature-description">Complete tenant records with payment history and contract management</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Communication Hub</h3>
+          <p class="feature-description">Built-in messaging for seamless landlord-tenant communication</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <p class="mt-8 text-sm text-blue-200">
-      Already have an account? 
-      <a (click)="goToLogin()" class="underline hover:text-white cursor-pointer">Sign in here</a>
-    </p>
-  </div>
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="content-wrapper">
+      <div class="cta-content">
+        <h2 class="cta-title">Ready to streamline your property management?</h2>
+        <p class="cta-subtitle">Join hundreds of landlords already using Rentify</p>
+        <button (click)="goToRegister()" class="btn-primary">
+          <span>Get Started Free</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="content-wrapper">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3 class="brand-name">Rentify</h3>
+          <p class="brand-tagline">Smart Boarding House Management</p>
+        </div>
+        <div class="footer-links">
+          <a (click)="goToLogin()" class="footer-link">Sign In</a>
+          <span class="separator">·</span>
+          <a (click)="goToRegister()" class="footer-link">Register</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 </div>

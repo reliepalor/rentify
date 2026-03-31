@@ -29,14 +29,8 @@ export class SupabaseService {
   async verifyProfileInDatabase() {
     const user = await this.getCurrentUser();
     if (!user) {
-      console.log('No authenticated user found');
       return null;
     }
-
-    console.log('=== PROFILE VERIFICATION ===');
-    console.log('User ID:', user.id);
-    console.log('User Email:', user.email);
-    console.log('User Metadata:', user.user_metadata);
 
     // Try to fetch all columns from profiles table for this user
     try {
@@ -46,21 +40,13 @@ export class SupabaseService {
         .eq('id', user.id)
         .single();
 
-      console.log('Query Status:', status);
-      console.log('Query Error:', error);
-      console.log('Query Data:', data);
-
-      if (data) {
-        console.log('=== PROFILE FOUND ===');
-        console.log('Role from DB:', data.role);
-        console.log('Role type:', typeof data.role);
-        console.log('Role length:', (data.role as string)?.length);
-        console.log('Role hex:', Array.from((data.role as string) || '').map(c => c.charCodeAt(0).toString(16)).join(' '));
+      if (error || status >= 400) {
+        console.error('Profile verification failed.');
       }
 
       return data;
     } catch (err) {
-      console.error('Profile verification exception:', err);
+      console.error('Profile verification failed.');
       return null;
     }
   }
@@ -71,8 +57,6 @@ export class SupabaseService {
     if (!user) return null;
 
     try {
-      console.log('Fetching profile for user:', user.id);
-      
       const { data, error } = await this.supabase
         .from('profiles')
         .select('*')
@@ -80,21 +64,10 @@ export class SupabaseService {
         .single();
 
       if (error) {
-        console.error('Profile query error details:', {
-          code: error?.code,
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint
-        });
-
-        // If permission error, log it
-        if (error?.message?.includes('403') || error?.message?.includes('permission')) {
-          console.warn('Permission Denied! User may not have access to their own profile.');
-        }
+        console.error('Unable to load profile from database.');
 
         // Fallback: return role from user metadata
         const metadataRole = user.user_metadata?.['role'] as string;
-        console.log('Fallback to metadata role:', metadataRole || 'tenant');
         
         return {
           id: user.id,
@@ -105,26 +78,20 @@ export class SupabaseService {
       }
 
       // Profile query succeeded
-      console.log('Profile found from database:', data);
-      console.log('Database role (raw):', data?.role);
-      console.log('Database role (type):', typeof data?.role);
-      
       // Ensure role is a string, lowercase, and trimmed
       if (data?.role && typeof data.role === 'string') {
         data.role = data.role.toLowerCase().trim();
-        console.log('Database role (cleaned):', data.role);
       } else if (data?.role) {
-        console.error('Role is not a string!', typeof data.role, data.role);
+        console.error('Invalid profile role format.');
         data.role = 'tenant'; // Fallback
       }
       
       return data;
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      console.error('Unable to load profile from database.');
       
       // Fallback to metadata
       const metadataRole = user.user_metadata?.['role'] as string;
-      console.log('Exception fallback - using metadata role:', metadataRole || 'tenant');
       
       return {
         id: user.id,
@@ -132,6 +99,29 @@ export class SupabaseService {
         full_name: user.user_metadata?.['full_name'] || '',
         created_at: user.created_at
       };
+    }
+  }
+
+  // Strict profile lookup from database only (no metadata fallback)
+  async getCurrentProfileStrict() {
+    const user = await this.getCurrentUser();
+    if (!user) return null;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error || !data) return null;
+
+      if (typeof data.role !== 'string') return null;
+
+      data.role = data.role.toLowerCase().trim();
+      return data;
+    } catch {
+      return null;
     }
   }
 }
