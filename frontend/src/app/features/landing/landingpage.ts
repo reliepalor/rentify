@@ -1,30 +1,35 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TenantHeaderComponent } from '../../shared/components/header/tenant-header.component';
 
 @Component({
-  selector: 'app-landing',
+  selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './landingpage.html',
-  styleUrls: ['./landingpage.css']
+  imports: [CommonModule, FormsModule, TenantHeaderComponent],
+  templateUrl: './landingpage.html'
 })
-export class LandingComponent implements OnInit {
-  isLoaded = false;
+export class LandingComponent {
+  checkInDate: string = '';
+  checkOutDate: string = '';
+  guests: number = 2;
 
-  constructor(private router: Router) {}
-
-  ngOnInit() {
-    setTimeout(() => {
-      this.isLoaded = true;
-    }, 100);
+  onSearch() {
+    console.log('Search:', {
+      checkIn: this.checkInDate,
+      checkOut: this.checkOutDate,
+      guests: this.guests
+    });
+    // Add your search logic here
   }
 
-  goToLogin() {
-    this.router.navigate(['/login']);
+  exploreAccommodations() {
+    // Navigate to accommodations section
+    console.log('Explore accommodations clicked');
   }
 
-  goToRegister() {
-    this.router.navigate(['/register']);
+  learnMore() {
+    // Navigate to about section
+    console.log('Learn more clicked');
   }
 }

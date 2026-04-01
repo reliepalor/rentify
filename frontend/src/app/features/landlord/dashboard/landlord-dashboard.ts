@@ -18,6 +18,6 @@ export class LandlordDashboard {
 
   async logout() {
     await this.supabaseService.client.auth.signOut();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/landing']);
   }
 }
