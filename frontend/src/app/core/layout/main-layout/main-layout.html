@@ -6,11 +6,13 @@
     class="hidden md:flex flex-col transition-all duration-300 border-r border-gray-200 bg-white shadow-sm">
 
     <app-admin-sidebar 
+      class="h-full"
       *ngIf="role === 'admin'" 
       [isCollapsed]="isSidebarCollapsed">
     </app-admin-sidebar>
 
     <app-landlord-sidebar 
+      class="h-full"
       *ngIf="role === 'landlord'" 
       [isCollapsed]="isSidebarCollapsed">
     </app-landlord-sidebar>
@@ -27,6 +29,19 @@
           (click)="toggleSidebar()" 
           class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-xl">
           ☰
+        </button>
+
+        <!-- Desktop Collapse Toggle -->
+        <button
+          (click)="toggleSidebar()"
+          class="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
+          [attr.aria-label]="isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+          <svg *ngIf="!isSidebarCollapsed" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+          </svg>
+          <svg *ngIf="isSidebarCollapsed" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
+          </svg>
         </button>
 
         <h1 class="text-xl font-semibold text-gray-800">

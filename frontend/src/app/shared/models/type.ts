@@ -103,6 +103,7 @@ export interface NewUnitForm {
 
 export interface NewPropertyForm {
   name: string;
+  address: string;
   barangay: string;
   municipality: string;
   province: string;

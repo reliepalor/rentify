@@ -17,44 +17,24 @@ export class LandlordPropertiesComponent implements OnInit {
 
   properties = signal<Property[]>([]);
   loading = signal(true);
-  showAddUnitModal = signal(false);
+
+  // Modals
   showAddPropertyModal = signal(false);
+  showEditPropertyModal = signal(false);
+  showAddUnitModal = signal(false);
+  showArchivePropertyModal = signal(false);
+
   selectedPropertyId = signal<string | null>(null);
+  selectedArchivePropertyId = signal<string | null>(null);
+  expandedUnitsByProperty = signal<Record<string, boolean>>({});
 
-  createEmptyPropertyForm(): NewPropertyForm {
-    return {
-      name: '',
-      barangay: '',
-      municipality: '',
-      province: '',
-      description: '',
-      image_url: '',
-      amenities: '',
-      house_rules: '',
-      status: 'active'
-    };
-  }
-
-  newProperty: NewPropertyForm = {
-    name: '',
-    barangay: '',
-    municipality: '',
-    province: '',
-    description: '',
-    image_url: '',
-    amenities: '',
-    house_rules: '',
-    status: 'active'
-  };
-
-  newUnit: NewUnitForm = {
-    room_number: '',
-    type: 'single',
-    capacity: 1,
-    monthly_rent: 0
-  };
+  // Forms
+  newProperty: NewPropertyForm = this.createEmptyPropertyForm();
+  editingProperty: NewPropertyForm = this.createEmptyPropertyForm();
+  newUnit: NewUnitForm = this.createEmptyUnitForm();
 
   selectedPropertyImage: File | null = null;
+  editingPropertyImage: File | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -66,14 +46,35 @@ export class LandlordPropertiesComponent implements OnInit {
     await this.loadProperties();
   }
 
+  createEmptyPropertyForm(): NewPropertyForm {
+    return {
+      name: '',
+      address: '',
+      barangay: '',
+      municipality: '',
+      province: '',
+      description: '',
+      image_url: '',
+      amenities: '',
+      house_rules: '',
+      status: 'active'
+    };
+  }
+
+  createEmptyUnitForm(): NewUnitForm {
+    return {
+      room_number: '',
+      type: 'single',
+      capacity: 1,
+      monthly_rent: 0
+    };
+  }
+
   async loadProperties() {
     this.loading.set(true);
     try {
       const user = await this.supabaseService.getCurrentUser();
-      if (!user) {
-        this.properties.set([]);
-        return;
-      }
+      if (!user) return;
 
       const { data, error } = await this.supabaseService.client
         .from('properties')
@@ -82,16 +83,21 @@ export class LandlordPropertiesComponent implements OnInit {
           units (*)
         `)
         .eq('landlord_id', user.id)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       this.properties.set(data || []);
+      this.expandedUnitsByProperty.set({});
     } catch (error) {
       console.error('Error loading properties:', error);
+      this.modalService.error('Load Failed', 'Failed to load properties. Please try again.');
     } finally {
       this.loading.set(false);
     }
   }
+
+  // ==================== PROPERTY CRUD ====================
 
   openAddPropertyModal() {
     this.newProperty = this.createEmptyPropertyForm();
@@ -99,33 +105,63 @@ export class LandlordPropertiesComponent implements OnInit {
     this.showAddPropertyModal.set(true);
   }
 
-  formatPropertyLocation(property: Property): string {
-    return [property.barangay, property.municipality, property.province]
-      .filter((part): part is string => Boolean(part))
-      .join(', ');
+  openEditPropertyModal(property: Property) {
+    this.editingProperty = {
+      name: property.name,
+      address: property.address || '',
+      barangay: property.barangay || '',
+      municipality: property.municipality || '',
+      province: property.province || '',
+      description: property.description || '',
+      image_url: property.image_url || '',
+      amenities: Array.isArray(property.amenities) ? property.amenities.join(', ') : '',
+      house_rules: property.house_rules || '',
+      status: property.status
+    };
+    this.selectedPropertyId.set(property.id);
+    this.showEditPropertyModal.set(true);
   }
 
   closeAddPropertyModal() {
     this.showAddPropertyModal.set(false);
   }
 
-  async addProperty() {
-    const locationLabel = this.buildLocationLabel();
+  closeEditPropertyModal() {
+    this.showEditPropertyModal.set(false);
+    this.selectedPropertyId.set(null);
+    this.editingPropertyImage = null;
+  }
 
-    if (!this.newProperty.name.trim() || !locationLabel) {
-      this.modalService.info('Missing Information', 'Please provide the property name and complete the location fields.');
+  openArchivePropertyModal(propertyId: string) {
+    this.selectedArchivePropertyId.set(propertyId);
+    this.showArchivePropertyModal.set(true);
+  }
+
+  closeArchivePropertyModal() {
+    this.showArchivePropertyModal.set(false);
+    this.selectedArchivePropertyId.set(null);
+  }
+
+  async confirmArchiveProperty() {
+    const propertyId = this.selectedArchivePropertyId();
+    if (!propertyId) return;
+
+    await this.archiveProperty(propertyId);
+    this.closeArchivePropertyModal();
+  }
+
+  async addProperty() {
+    if (!this.newProperty.name || !this.newProperty.barangay) {
+      this.modalService.info('Missing Information', 'Property name and location are required.');
       return;
     }
 
     try {
       const user = await this.supabaseService.getCurrentUser();
-      if (!user) {
-        this.modalService.error('Authentication Required', 'You must be logged in to add a property.');
-        return;
-      }
+      if (!user) return;
 
-      const imageUrl = this.selectedPropertyImage
-        ? await this.uploadPropertyImage(this.selectedPropertyImage, user.id)
+      const imageUrl = this.selectedPropertyImage 
+        ? await this.uploadPropertyImage(this.selectedPropertyImage, user.id) 
         : null;
 
       const { error } = await this.supabaseService.client
@@ -133,16 +169,16 @@ export class LandlordPropertiesComponent implements OnInit {
         .insert({
           landlord_id: user.id,
           name: this.newProperty.name.trim(),
-          address: locationLabel,
-          barangay: this.newProperty.barangay.trim() || null,
+          address: this.newProperty.address.trim() || null,
+          barangay: this.newProperty.barangay.trim(),
           municipality: this.newProperty.municipality.trim() || null,
           province: this.newProperty.province.trim() || null,
           description: this.newProperty.description?.trim() || null,
           image_url: imageUrl,
           amenities: this.parseAmenities(this.newProperty.amenities),
           house_rules: this.newProperty.house_rules?.trim() || null,
-          total_units: 0,
-          status: this.newProperty.status
+          status: this.newProperty.status,
+          is_active: true
         });
 
       if (error) throw error;
@@ -151,66 +187,79 @@ export class LandlordPropertiesComponent implements OnInit {
       this.closeAddPropertyModal();
       await this.loadProperties();
     } catch (error) {
-      console.error('Error adding property:', error);
+      console.error(error);
       this.modalService.error('Add Property Failed', 'Failed to add property. Please try again.');
     }
   }
 
-  private parseAmenities(amenities: NewPropertyForm['amenities']) {
-    if (typeof amenities !== 'string') {
-      return amenities ?? [];
+  async updateProperty() {
+    const propertyId = this.selectedPropertyId();
+    if (!propertyId) return;
+
+    if (!this.editingProperty.name?.trim() || !this.editingProperty.barangay?.trim()) {
+      this.modalService.info('Missing Information', 'Property name and location are required.');
+      return;
     }
 
-    return amenities
-      .split(/,|\n/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
+    try {
+      const user = await this.supabaseService.getCurrentUser();
+      if (!user) {
+        this.modalService.error('Authentication Required', 'You must be logged in to update a property.');
+        return;
+      }
 
-  private buildLocationLabel(): string {
-    const locationParts = [
-      this.newProperty.barangay.trim(),
-      this.newProperty.municipality.trim(),
-      this.newProperty.province.trim()
-    ].filter(Boolean);
+      const imageUrl = this.editingPropertyImage
+        ? await this.uploadPropertyImage(this.editingPropertyImage, user.id)
+        : this.editingProperty.image_url;
 
-    return locationParts.length === 3 ? locationParts.join(', ') : '';
-  }
+      const { error } = await this.supabaseService.client
+        .from('properties')
+        .update({
+          name: this.editingProperty.name.trim(),
+          address: this.editingProperty.address.trim() || null,
+          barangay: this.editingProperty.barangay.trim(),
+          municipality: this.editingProperty.municipality.trim() || null,
+          province: this.editingProperty.province.trim() || null,
+          description: this.editingProperty.description?.trim() || null,
+          image_url: imageUrl,
+          amenities: this.parseAmenities(this.editingProperty.amenities),
+          house_rules: this.editingProperty.house_rules?.trim() || null,
+          status: this.editingProperty.status
+        })
+        .eq('id', propertyId);
 
-  onPropertyImageSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.selectedPropertyImage = input.files?.[0] ?? null;
-  }
+      if (error) throw error;
 
-  private async uploadPropertyImage(file: File, userId: string): Promise<string> {
-    const fileExtension = file.name.split('.').pop() || 'jpg';
-    const sanitizedName = file.name
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .replace(/_+/g, '_');
-    const filePath = `${userId}/${Date.now()}-${sanitizedName}`;
-
-    const { error } = await this.supabaseService.client.storage
-      .from('property-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || `image/${fileExtension}`
-      });
-
-    if (error) {
-      throw error;
+      this.toastService.success('Property updated successfully!');
+      this.closeEditPropertyModal();
+      await this.loadProperties();
+    } catch (error) {
+      console.error(error);
+      this.modalService.error('Update Failed', 'Failed to update property. Please try again.');
     }
-
-    const { data } = this.supabaseService.client.storage
-      .from('property-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   }
+
+  async archiveProperty(propertyId: string) {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('properties')
+        .update({ is_active: false })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      this.toastService.success('Property archived successfully');
+      await this.loadProperties();
+    } catch (error) {
+      this.modalService.error('Archive Failed', 'Failed to archive property. Please try again.');
+    }
+  }
+
+  // ==================== UNIT CRUD ====================
 
   openAddUnitModal(propertyId: string) {
     this.selectedPropertyId.set(propertyId);
-    this.newUnit = { room_number: '', type: 'single', capacity: 1, monthly_rent: 0 };
+    this.newUnit = this.createEmptyUnitForm();
     this.showAddUnitModal.set(true);
   }
 
@@ -221,20 +270,8 @@ export class LandlordPropertiesComponent implements OnInit {
 
   async addUnit() {
     const propertyId = this.selectedPropertyId();
-    const roomNumber = this.newUnit.room_number.trim();
-
-    if (!propertyId || !roomNumber) {
-      this.modalService.info('Missing Information', 'Please fill in the room number.');
-      return;
-    }
-
-    const selectedProperty = this.properties().find((property) => property.id === propertyId);
-    const roomNumberInUse = (selectedProperty?.units ?? []).some(
-      (unit) => unit.room_number.trim().toLowerCase() === roomNumber.toLowerCase()
-    );
-
-    if (roomNumberInUse) {
-      this.modalService.error('Room Number Already Used', `Room ${roomNumber} is already in use for this property.`);
+    if (!propertyId || !this.newUnit.room_number.trim()) {
+      this.modalService.info('Missing Information', 'Please enter a room number.');
       return;
     }
 
@@ -243,7 +280,7 @@ export class LandlordPropertiesComponent implements OnInit {
         .from('units')
         .insert({
           property_id: propertyId,
-          room_number: roomNumber,
+          room_number: this.newUnit.room_number.trim(),
           type: this.newUnit.type,
           capacity: this.newUnit.capacity,
           monthly_rent: this.newUnit.monthly_rent
@@ -253,10 +290,68 @@ export class LandlordPropertiesComponent implements OnInit {
 
       this.toastService.success('Unit added successfully!');
       this.closeAddUnitModal();
-      await this.loadProperties(); // Refresh the list
+      await this.loadProperties();
     } catch (error) {
-      console.error('Error adding unit:', error);
       this.modalService.error('Add Unit Failed', 'Failed to add unit. Please try again.');
+    }
+  }
+
+  // ==================== HELPERS ====================
+
+  private parseAmenities(amenities: string | any): any {
+    if (Array.isArray(amenities)) return amenities;
+    if (typeof amenities !== 'string') return [];
+    return amenities.split(/,|\n/).map(item => item.trim()).filter(Boolean);
+  }
+
+  private async uploadPropertyImage(file: File, userId: string): Promise<string | null> {
+    try {
+      const filePath = `${userId}/properties/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+      const { error } = await this.supabaseService.client.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data } = this.supabaseService.client.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      return null;
+    }
+  }
+
+  toggleUnitsVisibility(propertyId: string) {
+    this.expandedUnitsByProperty.update(current => ({
+      ...current,
+      [propertyId]: !current[propertyId]
+    }));
+  }
+
+  isUnitsVisible(propertyId: string): boolean {
+    return !!this.expandedUnitsByProperty()[propertyId];
+  }
+
+  formatPropertyLocation(property: Property): string {
+    const parts = [property.barangay, property.municipality, property.province]
+      .map(part => part?.trim())
+      .filter(Boolean);
+
+    return parts.join(', ');
+  }
+
+  onPropertyImageSelected(event: Event, isEdit = false) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    
+    if (isEdit) {
+      this.editingPropertyImage = file;
+    } else {
+      this.selectedPropertyImage = file;
     }
   }
 }

@@ -44,7 +44,7 @@
 
           <div>
             <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{{ property.name }}</h2>
-            <p class="mt-1 text-sm text-slate-500">{{ property.address }}</p>
+            <!-- <p class="mt-1 text-sm text-slate-500">{{ property.address }}</p> -->
             <p *ngIf="formatPropertyLocation(property)" class="mt-1 text-sm text-slate-500">
               {{ formatPropertyLocation(property) }}
             </p>
@@ -52,10 +52,28 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <div class="rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
-            <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-500">Units</p>
-            <p class="mt-1 text-lg font-semibold text-slate-900">{{ property.units?.length ?? 0 }}</p>
+          <div class="rounded-2xl border border-emerald-100 bg-white px-6 py-3 shadow-sm flex justify-center gap-3">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-500 text-center flex justify-center items-center">Units</p>
+            <p class="text-md font-semibold text-slate-900">{{ property.units?.length ?? 0 }}</p>
           </div>
+
+          <button
+            (click)="openEditPropertyModal(property)"
+            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg">
+            Edit
+          </button>
+
+          <button
+            (click)="openArchivePropertyModal(property.id)"
+            class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-3 text-sm font-medium text-rose-600 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-rose-50 hover:shadow-lg">
+            Archive
+          </button>
+
+          <button
+            (click)="toggleUnitsVisibility(property.id)"
+            class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-5 py-3 text-sm font-medium text-sky-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-lg">
+            <span>{{ isUnitsVisible(property.id) ? 'Hide Units' : 'Show Units' }}</span>
+          </button>
 
           <button 
             (click)="openAddUnitModal(property.id)"
@@ -67,7 +85,23 @@
       </div>
     </div>
 
-    <div class="p-6 sm:p-8">
+    <div class="px-6 pt-6 sm:px-8">
+      <div class="overflow-hidden rounded-2xl border border-sky-100 bg-sky-50/40">
+        <img
+          *ngIf="property.image_url; else noPropertyImage"
+          [src]="property.image_url"
+          [alt]="property.name"
+          class="h-52 w-full object-cover sm:h-60">
+
+        <ng-template #noPropertyImage>
+          <div class="flex h-52 w-full items-center justify-center bg-gradient-to-br from-sky-50 to-emerald-50 text-sm font-medium text-slate-500 sm:h-60">
+            No property image uploaded
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div *ngIf="isUnitsVisible(property.id)" class="p-6 sm:p-8">
       <div *ngIf="(property.units?.length ?? 0) === 0" class="rounded-2xl border border-dashed border-sky-100 bg-sky-50/30 p-8 text-center text-sm text-slate-500">
         No units added yet. Click Add Unit to get started.
       </div>
@@ -103,7 +137,6 @@
     (click)="closeAddUnitModal()"></button>
 
   <div class="modal-panel relative mt-6 w-full max-w-md overflow-y-auto rounded-[28px] border border-sky-100 bg-white shadow-2xl origin-center sm:mt-0 max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)]">
-    <div class="h-1 w-full bg-gradient-to-r from-sky-400 via-white to-emerald-400"></div>
 
     <div class="p-6 sm:p-8">
       <div class="mb-6 flex items-start justify-between gap-4">
@@ -289,6 +322,170 @@
           Add Property
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showEditPropertyModal()" class="modal-backdrop fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+  <button
+    type="button"
+    aria-label="Close modal"
+    class="absolute inset-0 bg-slate-950/45 backdrop-blur-[6px]"
+    (click)="closeEditPropertyModal()"></button>
+
+  <div class="modal-panel relative mt-6 w-full max-w-4xl overflow-y-auto rounded-[32px] border border-sky-100 bg-white shadow-2xl origin-center sm:mt-0 max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)]">
+    <div class="p-6 sm:p-8 lg:p-10">
+      <div class="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sky-500">Property Details</p>
+          <h3 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Edit Property</h3>
+          <p class="mt-2 max-w-2xl text-sm text-slate-500">Update property details and save your changes.</p>
+        </div>
+
+        <button
+          type="button"
+          class="rounded-full border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-600 transition duration-200 hover:border-sky-200 hover:bg-sky-100 hover:text-sky-700"
+          (click)="closeEditPropertyModal()">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-8">
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Core Info</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Property Name <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="editingProperty.name" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="e.g. Greenfield Apartments">
+            </div>
+
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Status <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <select [(ngModel)]="editingProperty.status" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Image <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPropertyImageSelected($event, true)"
+                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition duration-200 file:mr-4 file:rounded-full file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-sky-700 hover:border-sky-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Location</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Barangay <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="editingProperty.barangay" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Barangay name">
+            </div>
+
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Municipality / City <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="editingProperty.municipality" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Municipality or city">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Province <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="editingProperty.province" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Province">
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Details</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Address <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <input [(ngModel)]="editingProperty.address" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Street / landmark">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Description <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="editingProperty.description"
+                rows="4"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Short summary of the property"></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Amenities <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="editingProperty.amenities"
+                rows="3"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Comma-separated or one per line, e.g. Wi-Fi, Water, Parking"></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">House Rules <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="editingProperty.house_rules"
+                rows="4"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Quiet hours, guest policy, maintenance rules"></textarea>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="mt-8 flex gap-3">
+        <button
+          (click)="closeEditPropertyModal()"
+          class="flex-1 rounded-full border border-sky-100 px-4 py-3 text-sm font-medium text-slate-700 transition duration-200 hover:bg-sky-50">
+          Cancel
+        </button>
+        <button
+          (click)="updateProperty()"
+          class="flex-1 rounded-full bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showArchivePropertyModal()" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+  <button
+    type="button"
+    aria-label="Close modal"
+    class="absolute inset-0 bg-slate-950/45 backdrop-blur-[6px]"
+    (click)="closeArchivePropertyModal()"></button>
+
+  <div class="modal-panel relative w-full max-w-md rounded-2xl border border-rose-100 bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-semibold text-slate-900">Archive Property</h3>
+    <p class="mt-2 text-sm text-slate-600">This property will be hidden from the list but not permanently deleted.</p>
+
+    <div class="mt-6 flex gap-3">
+      <button
+        (click)="closeArchivePropertyModal()"
+        class="flex-1 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+        Cancel
+      </button>
+      <button
+        (click)="confirmArchiveProperty()"
+        class="flex-1 rounded-full bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700">
+        Archive
+      </button>
     </div>
   </div>
 </div>
