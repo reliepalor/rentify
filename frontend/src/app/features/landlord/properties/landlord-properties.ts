@@ -151,8 +151,8 @@ export class LandlordPropertiesComponent implements OnInit {
   }
 
   async addProperty() {
-    if (!this.newProperty.name || !this.newProperty.barangay) {
-      this.modalService.info('Missing Information', 'Property name and location are required.');
+    if (!this.newProperty.name?.trim() || !this.newProperty.barangay?.trim() || !this.newProperty.municipality?.trim() || !this.newProperty.province?.trim()) {
+      this.modalService.info('Missing Information', 'Property name, barangay, municipality, and province are required.');
       return;
     }
 
@@ -169,10 +169,10 @@ export class LandlordPropertiesComponent implements OnInit {
         .insert({
           landlord_id: user.id,
           name: this.newProperty.name.trim(),
-          address: this.newProperty.address.trim() || null,
+          address: this.buildPropertyAddress(this.newProperty),
           barangay: this.newProperty.barangay.trim(),
-          municipality: this.newProperty.municipality.trim() || null,
-          province: this.newProperty.province.trim() || null,
+          municipality: this.newProperty.municipality.trim(),
+          province: this.newProperty.province.trim(),
           description: this.newProperty.description?.trim() || null,
           image_url: imageUrl,
           amenities: this.parseAmenities(this.newProperty.amenities),
@@ -196,8 +196,8 @@ export class LandlordPropertiesComponent implements OnInit {
     const propertyId = this.selectedPropertyId();
     if (!propertyId) return;
 
-    if (!this.editingProperty.name?.trim() || !this.editingProperty.barangay?.trim()) {
-      this.modalService.info('Missing Information', 'Property name and location are required.');
+    if (!this.editingProperty.name?.trim() || !this.editingProperty.barangay?.trim() || !this.editingProperty.municipality?.trim() || !this.editingProperty.province?.trim()) {
+      this.modalService.info('Missing Information', 'Property name, barangay, municipality, and province are required.');
       return;
     }
 
@@ -216,10 +216,10 @@ export class LandlordPropertiesComponent implements OnInit {
         .from('properties')
         .update({
           name: this.editingProperty.name.trim(),
-          address: this.editingProperty.address.trim() || null,
+          address: this.buildPropertyAddress(this.editingProperty),
           barangay: this.editingProperty.barangay.trim(),
-          municipality: this.editingProperty.municipality.trim() || null,
-          province: this.editingProperty.province.trim() || null,
+          municipality: this.editingProperty.municipality.trim(),
+          province: this.editingProperty.province.trim(),
           description: this.editingProperty.description?.trim() || null,
           image_url: imageUrl,
           amenities: this.parseAmenities(this.editingProperty.amenities),
@@ -302,6 +302,15 @@ export class LandlordPropertiesComponent implements OnInit {
     if (Array.isArray(amenities)) return amenities;
     if (typeof amenities !== 'string') return [];
     return amenities.split(/,|\n/).map(item => item.trim()).filter(Boolean);
+  }
+
+  private buildPropertyAddress(form: Pick<NewPropertyForm, 'address' | 'barangay' | 'municipality' | 'province'>): string {
+    const explicitAddress = form.address?.trim();
+    if (explicitAddress) return explicitAddress;
+
+    return [form.barangay?.trim(), form.municipality?.trim(), form.province?.trim()]
+      .filter(Boolean)
+      .join(', ');
   }
 
   private async uploadPropertyImage(file: File, userId: string): Promise<string | null> {
