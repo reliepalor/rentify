@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth-guard';
+import { MainLayoutComponent } from './core/layout/main-layout/main-layout';
 
 export const routes: Routes = [
   {
@@ -23,24 +24,47 @@ export const routes: Routes = [
       .then(m => m.RegisterComponent)
   },
 
-  // Protected Routes with Auth Guard
-  { 
-    path: 'admin', 
+  // === ADMIN ROUTES ===
+  {
+    path: 'admin',
+    component: MainLayoutComponent,
     canActivate: [AuthGuard],
-    loadComponent: () => import('./features/admin/dashboard/admin-dashboard')
-      .then(m => m.AdminDashboard) 
+    data: { role: 'admin' },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/dashboard/admin-dashboard')
+          .then(m => m.AdminDashboard)
+      }
+    ]
   },
-  { 
-    path: 'landlord', 
+
+  // === LANDLORD ROUTES ===
+  {
+    path: 'landlord',
+    component: MainLayoutComponent,
     canActivate: [AuthGuard],
-    loadComponent: () => import('./features/landlord/dashboard/landlord-dashboard')
-      .then(m => m.LandlordDashboard) 
+    data: { role: 'landlord' },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/landlord/dashboard/landlord-dashboard')
+          .then(m => m.LandlordDashboard)
+      },
+      {
+        path: 'properties',
+        loadComponent: () => import('./features/landlord/properties/landlord-properties')
+          .then(m => m.LandlordPropertiesComponent)
+      }
+    ]
   },
-  { 
-    path: 'tenant', 
+
+  // === TENANT ROUTES ===
+  {
+    path: 'tenant',
     canActivate: [AuthGuard],
     loadComponent: () => import('./features/tenant/dashboard/tenant-dashboard')
-      .then(m => m.TenantDashboard) 
+      .then(m => m.TenantDashboard)
   },
 
   { path: '**', redirectTo: 'landing' }

@@ -1,0 +1,294 @@
+<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="space-y-2">
+      <p class="text-xs uppercase tracking-[0.3em] text-sky-500">Landlord Workspace</p>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">My Properties & Units</h1>
+      <p class="max-w-2xl text-sm text-slate-500">
+        Manage property details and unit inventory in a focused, minimal interface.
+      </p>
+    </div>
+
+    <button
+      (click)="openAddPropertyModal()"
+      class="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
+      <span class="text-base leading-none">+</span>
+      Add New Property
+    </button>
+  </div>
+
+  <div *ngIf="loading()" class="rounded-3xl border border-sky-100 bg-white p-10 text-center shadow-sm">
+    <p class="text-sm text-slate-500">Loading your properties...</p>
+  </div>
+
+  <div *ngIf="!loading() && properties().length === 0" class="rounded-3xl border border-dashed border-sky-100 bg-white p-10 text-center shadow-sm">
+    <p class="text-sm text-slate-500">You don't have any properties yet.</p>
+  </div>
+
+  <div *ngFor="let property of properties()" class="mb-8 overflow-hidden rounded-[28px] border border-sky-100 bg-white shadow-sm backdrop-blur-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_20px_45px_rgba(59,130,246,0.08)]">
+    <div class="border-b border-sky-50 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/50 px-6 py-5 sm:px-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">Property</span>
+            <span
+              class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition"
+              [class.border-emerald-200]="property.status === 'active'"
+              [class.text-emerald-700]="property.status === 'active'"
+              [class.bg-emerald-50]="property.status === 'active'"
+              [class.border-sky-100]="property.status !== 'active'"
+              [class.text-sky-700]="property.status !== 'active'"
+              [class.bg-sky-50]="property.status !== 'active'">
+              {{ property.status | titlecase }}
+            </span>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{{ property.name }}</h2>
+            <p class="mt-1 text-sm text-slate-500">{{ property.address }}</p>
+            <p *ngIf="formatPropertyLocation(property)" class="mt-1 text-sm text-slate-500">
+              {{ formatPropertyLocation(property) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-500">Units</p>
+            <p class="mt-1 text-lg font-semibold text-slate-900">{{ property.units?.length ?? 0 }}</p>
+          </div>
+
+          <button 
+            (click)="openAddUnitModal(property.id)"
+            class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-lg">
+            <span class="text-base leading-none">+</span>
+            Add Unit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 sm:p-8">
+      <div *ngIf="(property.units?.length ?? 0) === 0" class="rounded-2xl border border-dashed border-sky-100 bg-sky-50/30 p-8 text-center text-sm text-slate-500">
+        No units added yet. Click Add Unit to get started.
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" *ngIf="(property.units?.length ?? 0) > 0">
+        <div *ngFor="let unit of (property.units ?? [])" class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-lg font-semibold text-slate-900">Room {{ unit.room_number }}</p>
+              <p class="text-sm capitalize text-slate-500">{{ unit.type }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-semibold text-slate-900">₱{{ unit.monthly_rent }}</p>
+              <p class="text-xs uppercase tracking-[0.14em] text-sky-400">per month</p>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+            <span>Capacity</span>
+            <span class="font-medium text-slate-900">{{ unit.capacity }} person(s)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div *ngIf="showAddUnitModal()" class="modal-backdrop fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+  <button
+    type="button"
+    aria-label="Close modal"
+    class="absolute inset-0 bg-slate-950/45 backdrop-blur-[6px]"
+    (click)="closeAddUnitModal()"></button>
+
+  <div class="modal-panel relative mt-6 w-full max-w-md overflow-y-auto rounded-[28px] border border-sky-100 bg-white shadow-2xl origin-center sm:mt-0 max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)]">
+    <div class="h-1 w-full bg-gradient-to-r from-sky-400 via-white to-emerald-400"></div>
+
+    <div class="p-6 sm:p-8">
+      <div class="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sky-500">Unit Details</p>
+          <h3 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Add New Unit</h3>
+        </div>
+        <button
+          type="button"
+          class="rounded-full border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-600 transition hover:border-sky-200 hover:bg-sky-100 hover:text-sky-700"
+          (click)="closeAddUnitModal()">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-5">
+        <div>
+          <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Room Number</label>
+          <input [(ngModel)]="newUnit.room_number" class="w-full rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="e.g. 101">
+        </div>
+
+        <div>
+          <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Unit Type</label>
+          <select [(ngModel)]="newUnit.type" class="w-full rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-slate-900 outline-none transition duration-200 focus:border-sky-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+            <option value="single">Single Room</option>
+            <option value="shared">Shared Room</option>
+            <option value="bedspace">Bedspace</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Capacity <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-500">Optional</span></label>
+            <input type="number" [(ngModel)]="newUnit.capacity" class="w-full rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-slate-900 outline-none transition duration-200 focus:border-sky-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" min="1">
+          </div>
+
+          <div>
+            <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Monthly Rent (₱) <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-500">Optional</span></label>
+            <input type="number" [(ngModel)]="newUnit.monthly_rent" class="w-full rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-slate-900 outline-none transition duration-200 focus:border-sky-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex gap-3">
+        <button (click)="closeAddUnitModal()" class="flex-1 rounded-full border border-sky-100 px-4 py-3 text-sm font-medium text-slate-700 transition duration-200 hover:bg-sky-50">
+          Cancel
+        </button>
+        <button (click)="addUnit()" class="flex-1 rounded-full bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
+          Add Unit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div *ngIf="showAddPropertyModal()" class="modal-backdrop fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+  <button
+    type="button"
+    aria-label="Close modal"
+    class="absolute inset-0 bg-slate-950/45 backdrop-blur-[6px]"
+    (click)="closeAddPropertyModal()"></button>
+
+  <div class="modal-panel relative mt-6 w-full max-w-4xl overflow-y-auto rounded-[32px] border border-sky-100 bg-white shadow-2xl origin-center sm:mt-0 max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)]">
+
+    <div class="p-6 sm:p-8 lg:p-10">
+      <div class="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sky-500">Property Details</p>
+          <h3 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Add New Property</h3>
+          <p class="mt-2 max-w-2xl text-sm text-slate-500">Fill in the core property details and keep the optional fields light and structured.</p>
+        </div>
+
+        <button
+          type="button"
+          class="rounded-full border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-600 transition duration-200 hover:border-sky-200 hover:bg-sky-100 hover:text-sky-700"
+          (click)="closeAddPropertyModal()">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-8">
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Core Info</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Property Name <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="newProperty.name" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="e.g. Greenfield Apartments">
+            </div>
+
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Status <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <select [(ngModel)]="newProperty.status" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Image <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPropertyImageSelected($event)"
+                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition duration-200 file:mr-4 file:rounded-full file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-sky-700 hover:border-sky-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]">
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Location</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Barangay <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="newProperty.barangay" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Barangay name">
+            </div>
+
+            <div>
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Municipality / City <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="newProperty.municipality" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Municipality or city">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Province <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">req</span></label>
+              <input [(ngModel)]="newProperty.province" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]" placeholder="Province">
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[0.6rem] font-semibold text-left tracking-[0.24em] text-gray-500">Details</span>
+            <span class="h-[0.5px] flex-1 bg-slate-100"></span>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Description <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="newProperty.description"
+                rows="4"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Short summary of the property"></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Amenities <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="newProperty.amenities"
+                rows="3"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Comma-separated or one per line, e.g. Wi-Fi, Water, Parking"></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">House Rules <span class="text-[8px] font-medium uppercase tracking-[0.18em] text-slate-400">opt</span></label>
+              <textarea
+                [(ngModel)]="newProperty.house_rules"
+                rows="4"
+                class="w-full min-h-[7rem] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)]"
+                placeholder="Quiet hours, guest policy, maintenance rules"></textarea>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="mt-8 flex gap-3">
+        <button
+          (click)="closeAddPropertyModal()"
+          class="flex-1 rounded-full border border-sky-100 px-4 py-3 text-sm font-medium text-slate-700 transition duration-200 hover:bg-sky-50">
+          Cancel
+        </button>
+        <button
+          (click)="addProperty()"
+          class="flex-1 rounded-full bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
+          Add Property
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
