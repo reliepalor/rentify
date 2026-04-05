@@ -43,7 +43,7 @@ export class MainLayoutComponent implements OnInit {
   async logout() {
     try {
       await this.supabaseService.client.auth.signOut();
-      this.router.navigate(['/login']);
+      this.router.navigate(['/landing']);
     } catch (error) {
       console.error('Logout error:', error);
     }

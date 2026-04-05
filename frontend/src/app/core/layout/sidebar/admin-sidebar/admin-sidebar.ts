@@ -20,7 +20,7 @@ export class AdminSidebarComponent {
   async logout() {
     try {
       await this.supabaseService.client.auth.signOut();
-      await this.router.navigate(['/login']);
+      await this.router.navigate(['/landing']);
     } catch (error) {
       console.error('Logout error:', error);
     }

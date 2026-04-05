@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../core/services/supabase.service';
@@ -27,6 +27,20 @@ export class LandlordPropertiesComponent implements OnInit {
   selectedPropertyId = signal<string | null>(null);
   selectedArchivePropertyId = signal<string | null>(null);
   expandedUnitsByProperty = signal<Record<string, boolean>>({});
+  viewMode = signal<'table' | 'card'>('table');
+  searchQuery = signal('');
+  filteredProperties = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const list = this.properties();
+
+    if (!query) return list;
+
+    return list.filter(property => {
+      const name = property.name?.toLowerCase() || '';
+      const location = this.formatPropertyLocation(property).toLowerCase();
+      return name.includes(query) || location.includes(query);
+    });
+  });
 
   // Forms
   newProperty: NewPropertyForm = this.createEmptyPropertyForm();
@@ -351,6 +365,10 @@ export class LandlordPropertiesComponent implements OnInit {
       .filter(Boolean);
 
     return parts.join(', ');
+  }
+
+  setViewMode(mode: 'table' | 'card') {
+    this.viewMode.set(mode);
   }
 
   onPropertyImageSelected(event: Event, isEdit = false) {

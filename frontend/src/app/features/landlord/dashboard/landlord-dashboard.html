@@ -1,52 +1,168 @@
-<div class="min-h-screen bg-gray-50">
-  <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold text-gray-800">Rentify</h1>
-        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Landlord</span>
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-10">
+      <div>
+        <h1 class="text-4xl font-bold text-slate-900">Landlord Dashboard</h1>
+        <p class="text-slate-500 mt-1">Overview of your boarding house business</p>
       </div>
-      
-      <div class="flex items-center gap-6">
-        <span class="text-sm text-gray-600">Welcome, Landlord</span>
-        <button 
-          (click)="logout()"
-          class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-2xl transition">
-          Logout
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <div class="max-w-7xl mx-auto px-6 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">Landlord Dashboard</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <p class="text-gray-500 text-sm">My Properties</p>
-        <p class="text-4xl font-bold text-blue-600 mt-2">12</p>
-      </div>
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <p class="text-gray-500 text-sm">Current Tenants</p>
-        <p class="text-4xl font-bold text-green-600 mt-2">34</p>
-      </div>
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <p class="text-gray-500 text-sm">Pending Applications</p>
-        <p class="text-4xl font-bold text-orange-600 mt-2">7</p>
+      <div class="text-right">
+        <p class="text-sm text-slate-500">Welcome back</p>
+        <p class="font-medium">{{ today | date:'EEEE, MMMM d' }}</p>
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl shadow p-8">
-      <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
-      <div class="grid grid-cols-2 gap-4">
-        <button class="p-6 border-2 border-dashed border-gray-300 rounded-3xl hover:border-blue-500 transition text-left">
-          <span class="text-2xl mb-2 block">🏠</span>
-          <p class="font-medium">Add New Property</p>
-        </button>
-        <button class="p-6 border-2 border-dashed border-gray-300 rounded-3xl hover:border-blue-500 transition text-left">
-          <span class="text-2xl mb-2 block">📋</span>
-          <p class="font-medium">View Tenant Applications</p>
-        </button>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Total Properties</p>
+        <p class="text-4xl font-bold text-slate-900 mt-2">{{ displayTotalProperties() }}</p>
       </div>
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Total Units</p>
+        <p class="text-4xl font-bold text-slate-900 mt-2">{{ displayTotalUnits() }}</p>
+      </div>
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Active Tenants</p>
+        <p class="text-4xl font-bold text-emerald-600 mt-2">{{ displayActiveTenants() }}</p>
+      </div>
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Total Revenue (All Time)</p>
+        <p class="text-4xl font-bold text-emerald-600 mt-2">₱{{ displayMonthlyRevenue() }}</p>
+        <p class="text-xs text-slate-500 mt-2">This month: ₱{{ currentMonthRevenue() }}</p>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <!-- Revenue Trend -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-emerald-100/60 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="font-semibold text-slate-900">Revenue Trend</h3>
+          <span class="text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">Last 6 Months</span>
+        </div>
+        <div class="h-56">
+          <canvas #revenueChart></canvas>
+        </div>
+      </div>
+
+      <!-- Occupancy Rate -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-sky-100/70 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="font-semibold text-slate-900">Occupancy Rate</h3>
+          <span class="text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700">Live</span>
+        </div>
+        <div class="flex justify-center">
+          <div class="h-40 w-40">
+            <canvas #occupancyChart></canvas>
+          </div>
+        </div>
+        <p class="text-center text-3xl font-bold text-emerald-600 mt-3 transition-all duration-500">{{ displayOccupancyRate() }}%</p>
+        <p class="text-center text-sm text-slate-500">{{ occupiedUnitsCount() }} occupied of {{ totalUnits() }} total units</p>
+      </div>
+    </div>
+
+    <!-- Live Activity -->
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-10">
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-900">Recent Applications</h3>
+          <span class="text-xs text-slate-400">Live</span>
+        </div>
+
+        <div *ngIf="recentApplications().length === 0" class="text-sm text-slate-500">No applications yet.</div>
+
+        <div *ngFor="let app of recentApplications()" class="py-3 border-b border-slate-100 last:border-b-0">
+          <div class="w-full flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-slate-900">{{ app.tenant?.full_name || 'Unknown Tenant' }}</p>
+              <p class="text-xs text-slate-500">
+                {{ app.unit?.property?.name || 'Unknown Property' }} - {{ app.unit?.room_number || 'No Unit' }}
+              </p>
+              <p class="text-xs text-slate-400 mt-1">{{ app.application_date | date:'medium' }}</p>
+            </div>
+
+            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                  [class.bg-emerald-50]="app.status === 'approved'"
+                  [class.text-emerald-700]="app.status === 'approved'"
+                  [class.bg-red-50]="app.status === 'rejected'"
+                  [class.text-red-700]="app.status === 'rejected'"
+                  [class.bg-amber-50]="app.status === 'pending'"
+                  [class.text-amber-700]="app.status === 'pending'"
+                  [class.bg-slate-100]="app.status !== 'approved' && app.status !== 'rejected' && app.status !== 'pending'"
+                  [class.text-slate-700]="app.status !== 'approved' && app.status !== 'rejected' && app.status !== 'pending'">
+              {{ app.status || 'unknown' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-6 shadow-sm xl:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-900">Recent Payments</h3>
+          <span class="text-xs text-slate-400">Live</span>
+        </div>
+
+        <div *ngIf="recentPayments().length === 0" class="text-sm text-slate-500">No payments yet.</div>
+
+        <div *ngFor="let payment of recentPayments()" class="py-3 border-b border-slate-100 last:border-b-0">
+          <div class="w-full flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-slate-900">₱{{ payment.amount }} • {{ payment.method | titlecase }}</p>
+              <p class="text-xs text-slate-500 mt-1">{{ payment.tenant?.full_name || 'Unknown Tenant' }}</p>
+              <p class="text-xs text-slate-500 truncate">
+                {{ payment.billing?.property?.name || 'Unknown Property' }} - {{ payment.billing?.unit?.room_number || 'No Unit' }}
+              </p>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-xs text-slate-400">{{ payment.payment_date | date:'medium' }}</p>
+              <span class="inline-block mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                {{ payment.status || 'completed' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-900">Overdue Bills</h3>
+          <span class="text-xs text-red-400">Attention</span>
+        </div>
+
+        <div *ngIf="overdueBills().length === 0" class="text-sm text-slate-500">No overdue bills.</div>
+
+        <div *ngFor="let bill of overdueBills()" class="py-3 border-b border-slate-100 last:border-b-0">
+          <p class="text-sm font-medium text-slate-900">₱{{ bill.total_amount }}</p>
+          <p class="text-xs text-slate-500">{{ bill.tenant?.full_name || 'Unknown Tenant' }}</p>
+          <p class="text-xs text-slate-500">{{ bill.property?.name || 'Unknown Property' }} - {{ bill.unit?.room_number || 'No Unit' }}</p>
+          <p class="text-xs text-red-500 mt-1">Due {{ bill.due_date | date:'mediumDate' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <button (click)="goToProperties()" 
+              class="bg-white rounded-3xl p-8 text-left hover:shadow-md transition group">
+        <div class="text-4xl mb-4">🏠</div>
+        <h3 class="font-semibold text-lg">My Properties</h3>
+        <p class="text-sm text-slate-500">Manage properties and units</p>
+      </button>
+
+      <button (click)="goToApplications()" 
+              class="bg-white rounded-3xl p-8 text-left hover:shadow-md transition group">
+        <div class="text-4xl mb-4">📋</div>
+        <h3 class="font-semibold text-lg">Applications</h3>
+        <p class="text-sm text-slate-500">Review tenant applications</p>
+      </button>
+
+      <button (click)="goToBilling()" 
+              class="bg-white rounded-3xl p-8 text-left hover:shadow-md transition group">
+        <div class="text-4xl mb-4">💰</div>
+        <h3 class="font-semibold text-lg">Billing & Payments</h3>
+        <p class="text-sm text-slate-500">Manage bills and payments</p>
+      </button>
     </div>
   </div>
 </div>

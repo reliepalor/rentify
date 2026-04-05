@@ -1,0 +1,274 @@
+<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="space-y-2">
+      <p class="text-xs uppercase tracking-[0.3em] text-emerald-600">Landlord Workspace</p>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Rental Applications</h1>
+      <p class="max-w-2xl text-sm text-slate-500">
+        Review and manage tenant applications for your properties.
+      </p>
+    </div>
+
+
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="rounded-3xl border border-emerald-100 bg-white p-12 text-center shadow-sm">
+    <p class="text-sm text-slate-500">Loading applications...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && applications().length === 0" 
+       class="rounded-3xl border border-dashed border-emerald-100 bg-white p-12 text-center shadow-sm">
+    <p class="text-lg text-slate-500">No rental applications yet.</p>
+  </div>
+
+  <div *ngIf="!loading() && applications().length > 0" class="relative">
+    <div class="mb-4 flex flex-col gap-3 rounded-3xl border border-emerald-100 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div class="relative w-full sm:max-w-lg">
+        <input
+          type="text"
+          #searchInput
+          [value]="searchQuery()"
+          (input)="searchQuery.set(searchInput.value)"
+          placeholder="Search by tenant, property, location, or room"
+          class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
+        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">⌕</span>
+      </div>
+
+      <div class="inline-flex w-full items-center rounded-full border border-emerald-100 bg-emerald-50/70 p-1 shadow-sm sm:w-auto sm:justify-end">
+        <button
+          type="button"
+          (click)="setViewMode('table')"
+          [disabled]="viewportWidth() < 768"
+          class="rounded-full px-4 py-2 text-sm font-medium transition"
+          [class.bg-white]="effectiveViewMode() === 'table'"
+          [class.text-emerald-700]="effectiveViewMode() === 'table'"
+          [class.shadow-sm]="effectiveViewMode() === 'table'"
+          [class.text-slate-600]="effectiveViewMode() !== 'table'"
+          [class.opacity-45]="viewportWidth() < 768"
+          [class.cursor-not-allowed]="viewportWidth() < 768"
+          [class.bg-slate-50]="viewportWidth() < 768"
+          [class.text-slate-400]="viewportWidth() < 768">
+          Table
+        </button>
+        <button
+          type="button"
+          (click)="setViewMode('card')"
+          class="rounded-full px-4 py-2 text-sm font-medium transition"
+          [class.bg-white]="effectiveViewMode() === 'card'"
+          [class.text-emerald-700]="effectiveViewMode() === 'card'"
+          [class.shadow-sm]="effectiveViewMode() === 'card'"
+          [class.text-slate-600]="effectiveViewMode() !== 'card'">
+          Cards
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="transition-all duration-300 ease-out"
+      [class.opacity-100]="effectiveViewMode() === 'table'"
+      [class.translate-y-0]="effectiveViewMode() === 'table'"
+      [class.opacity-0]="effectiveViewMode() !== 'table'"
+      [class.translate-y-1]="effectiveViewMode() !== 'table'"
+      [class.h-0]="effectiveViewMode() !== 'table'"
+      [class.overflow-hidden]="effectiveViewMode() !== 'table'">
+      <div class="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="min-w-[960px] divide-y divide-slate-100">
+            <thead class="bg-slate-50/90">
+              <tr>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Applicant</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Property & Unit</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Message</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Submitted</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Status</th>
+                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngIf="filteredApplications().length === 0">
+                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">
+                  No applications match your search.
+                </td>
+              </tr>
+
+              <ng-container *ngFor="let app of filteredApplications()">
+                <tr class="align-top transition-colors hover:bg-emerald-50/30">
+                  <td class="px-6 py-5">
+                    <div class="flex items-center gap-4">
+                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-xl">👤</div>
+                      <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ app.tenant?.full_name || 'Unknown Tenant' }}</p>
+                        <p class="text-xs text-slate-500">{{ app.tenant?.contact_number || 'No contact number' }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-5">
+                    <p class="text-sm font-semibold text-slate-900">{{ app.property?.name || 'Unknown Property' }}</p>
+                    <p class="mt-1 text-sm text-slate-600">Room {{ app.unit?.room_number || 'N/A' }}</p>
+                    <p class="text-xs text-slate-500">{{ app.unit?.type | titlecase }} • ₱{{ app.unit?.monthly_rent }}/month</p>
+                  </td>
+                  <td class="px-6 py-5">
+                    <button
+                      *ngIf="app.message"
+                      type="button"
+                      (click)="openTenantMessage(app.message)"
+                      class="w-full max-w-[18rem] rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-slate-800">
+                      <span class="block truncate">{{ getMessagePreview(app.message) }}</span>
+                      <span class="mt-1 block text-[11px] uppercase tracking-[0.2em] text-emerald-600">Click to read</span>
+                    </button>
+                    <span *ngIf="!app.message" class="text-sm text-slate-400">No message</span>
+                  </td>
+                  <td class="px-6 py-5 text-sm text-slate-600">
+                    {{ app.application_date | date:'mediumDate' }}
+                  </td>
+                  <td class="px-6 py-5">
+                    <span
+                      class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
+                      [class.border-amber-200]="app.status === 'pending'"
+                      [class.bg-amber-50]="app.status === 'pending'"
+                      [class.text-amber-700]="app.status === 'pending'"
+                      [class.border-emerald-200]="app.status === 'approved'"
+                      [class.bg-emerald-50]="app.status === 'approved'"
+                      [class.text-emerald-700]="app.status === 'approved'"
+                      [class.border-rose-200]="app.status === 'rejected'"
+                      [class.bg-rose-50]="app.status === 'rejected'"
+                      [class.text-rose-700]="app.status === 'rejected'">
+                      {{ app.status | titlecase }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-5">
+                    <div class="flex flex-wrap items-center justify-end gap-2 sm:justify-end">
+                      <button
+                        *ngIf="app.status === 'pending'"
+                        (click)="openConfirmModal(app, 'approve')"
+                        class="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 transition hover:bg-blue-100">
+                        Approve
+                      </button>
+                      <button
+                        *ngIf="app.status === 'pending'"
+                        (click)="openConfirmModal(app, 'reject')"
+                        class="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-100">
+                        Reject
+                      </button>
+                      <span *ngIf="app.status !== 'pending'" class="text-xs text-slate-500">No actions available</span>
+                    </div>
+                  </td>
+                </tr>
+
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="transition-all duration-300 ease-out"
+      [class.opacity-100]="effectiveViewMode() === 'card'"
+      [class.translate-y-0]="effectiveViewMode() === 'card'"
+      [class.opacity-0]="effectiveViewMode() !== 'card'"
+      [class.translate-y-1]="effectiveViewMode() !== 'card'"
+      [class.h-0]="effectiveViewMode() !== 'card'"
+      [class.overflow-hidden]="effectiveViewMode() !== 'card'">
+      <div *ngIf="filteredApplications().length === 0" class="rounded-3xl border border-dashed border-emerald-100 bg-white p-8 text-center text-sm text-slate-500">
+        No applications match your search.
+      </div>
+
+      <div *ngFor="let app of filteredApplications()" class="mb-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md sm:p-6">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-4">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-2xl">👤</div>
+              <div>
+                <p class="text-lg font-semibold text-slate-900">{{ app.tenant?.full_name || 'Unknown Tenant' }}</p>
+                <p class="text-sm text-slate-500">{{ app.tenant?.contact_number || 'No contact number' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Applied For</p>
+            <p class="mt-1 text-sm font-semibold text-slate-900">{{ app.property?.name || 'Unknown Property' }} - Room {{ app.unit?.room_number || 'N/A' }}</p>
+            <p class="text-xs text-slate-500">{{ app.unit?.type | titlecase }} • ₱{{ app.unit?.monthly_rent }}/month</p>
+          </div>
+
+          <div class="flex-1">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Message</p>
+            <button
+              *ngIf="app.message"
+              type="button"
+              (click)="openTenantMessage(app.message)"
+              class="mt-1 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-slate-800">
+              <span class="block truncate">{{ getMessagePreview(app.message) }}</span>
+              <span class="mt-1 block text-[11px] uppercase tracking-[0.2em] text-emerald-600">Click to read</span>
+            </button>
+            <p *ngIf="!app.message" class="mt-1 text-sm text-slate-400">No message</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+            <div class="text-left lg:text-right">
+              <p class="text-xs text-slate-500">{{ app.application_date | date:'mediumDate' }}</p>
+              <span
+                class="mt-2 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
+                [class.border-amber-200]="app.status === 'pending'"
+                [class.bg-amber-50]="app.status === 'pending'"
+                [class.text-amber-700]="app.status === 'pending'"
+                [class.border-emerald-200]="app.status === 'approved'"
+                [class.bg-emerald-50]="app.status === 'approved'"
+                [class.text-emerald-700]="app.status === 'approved'"
+                [class.border-rose-200]="app.status === 'rejected'"
+                [class.bg-rose-50]="app.status === 'rejected'"
+                [class.text-rose-700]="app.status === 'rejected'">
+                {{ app.status | titlecase }}
+              </span>
+            </div>
+
+            <div class="flex gap-3" *ngIf="app.status === 'pending'">
+              <button
+                (click)="openConfirmModal(app, 'approve')"
+                class="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100">
+                Approve
+              </button>
+              <button
+                (click)="openConfirmModal(app, 'reject')"
+                class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100">
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div *ngIf="showConfirmModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[6px]">
+  <div class="w-full max-w-md rounded-3xl border border-emerald-100 bg-white p-8 shadow-2xl">
+    <h3 class="mb-2 text-xl font-semibold text-slate-900">
+      {{ actionType === 'approve' ? 'Approve Application?' : 'Reject Application?' }}
+    </h3>
+    <p class="mb-8 text-slate-600">
+      {{ actionType === 'approve' 
+        ? 'This will approve the tenant application and create a rental record.' 
+        : 'This will reject the application. The tenant will be notified.' }}
+    </p>
+
+    <div class="flex gap-3">
+      <button (click)="closeConfirmModal()" 
+              class="flex-1 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancel</button>
+      <button (click)="confirmAction()" 
+              class="flex-1 rounded-2xl py-3 text-sm font-medium"
+              [class.bg-emerald-600]="actionType === 'approve'"
+              [class.text-white]="actionType === 'approve'"
+              [class.hover:bg-emerald-700]="actionType === 'approve'"
+              [class.bg-rose-600]="actionType === 'reject'"
+              [class.text-white]="actionType === 'reject'"
+              [class.hover:bg-rose-700]="actionType === 'reject'">
+        {{ actionType === 'approve' ? 'Yes, Approve' : 'Yes, Reject' }}
+      </button>
+    </div>
+  </div>
+</div>

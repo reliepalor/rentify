@@ -1,127 +1,286 @@
 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
   <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div class="space-y-2">
-      <p class="text-xs uppercase tracking-[0.3em] text-sky-500">Landlord Workspace</p>
+      <p class="text-xs uppercase tracking-[0.3em] text-emerald-600">Landlord Workspace</p>
       <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">My Properties & Units</h1>
-      <p class="max-w-2xl text-sm text-slate-500">
-        Manage property details and unit inventory in a focused, minimal interface.
-      </p>
-    </div>
 
-    <button
-      (click)="openAddPropertyModal()"
-      class="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
-      <span class="text-base leading-none">+</span>
-      Add New Property
-    </button>
+    </div>
   </div>
 
-  <div *ngIf="loading()" class="rounded-3xl border border-sky-100 bg-white p-10 text-center shadow-sm">
+  <div *ngIf="loading()" class="rounded-3xl border border-emerald-100 bg-white p-10 text-center shadow-sm">
     <p class="text-sm text-slate-500">Loading your properties...</p>
   </div>
 
-  <div *ngIf="!loading() && properties().length === 0" class="rounded-3xl border border-dashed border-sky-100 bg-white p-10 text-center shadow-sm">
+  <div *ngIf="!loading() && properties().length === 0" class="rounded-3xl border border-dashed border-emerald-100 bg-white p-10 text-center shadow-sm">
     <p class="text-sm text-slate-500">You don't have any properties yet.</p>
   </div>
 
-  <div *ngFor="let property of properties()" class="mb-8 overflow-hidden rounded-[28px] border border-sky-100 bg-white shadow-sm backdrop-blur-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_20px_45px_rgba(59,130,246,0.08)]">
-    <div class="border-b border-sky-50 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/50 px-6 py-5 sm:px-8">
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div class="space-y-3">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">Property</span>
-            <span
-              class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition"
-              [class.border-emerald-200]="property.status === 'active'"
-              [class.text-emerald-700]="property.status === 'active'"
-              [class.bg-emerald-50]="property.status === 'active'"
-              [class.border-sky-100]="property.status !== 'active'"
-              [class.text-sky-700]="property.status !== 'active'"
-              [class.bg-sky-50]="property.status !== 'active'">
-              {{ property.status | titlecase }}
-            </span>
-          </div>
+  <div *ngIf="!loading() && properties().length > 0" class="relative">
+    <div class="mb-4 flex flex-col gap-3 rounded-3xl border border-emerald-100 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div class="relative w-full sm:max-w-lg">
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search by property name or location"
+          class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
+        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">⌕</span>
+      </div>
 
-          <div>
-            <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{{ property.name }}</h2>
-            <!-- <p class="mt-1 text-sm text-slate-500">{{ property.address }}</p> -->
-            <p *ngIf="formatPropertyLocation(property)" class="mt-1 text-sm text-slate-500">
-              {{ formatPropertyLocation(property) }}
-            </p>
-          </div>
+      <div class="flex flex-wrap items-center gap-3 sm:justify-end">
+        <div class="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50/70 p-1 shadow-sm">
+          <button
+            type="button"
+            (click)="setViewMode('table')"
+            class="rounded-full px-4 py-2 text-sm font-medium transition"
+            [class.bg-white]="viewMode() === 'table'"
+            [class.text-emerald-700]="viewMode() === 'table'"
+            [class.shadow-sm]="viewMode() === 'table'"
+            [class.text-slate-600]="viewMode() !== 'table'">
+            Table
+          </button>
+          <button
+            type="button"
+            (click)="setViewMode('card')"
+            class="rounded-full px-4 py-2 text-sm font-medium transition"
+            [class.bg-white]="viewMode() === 'card'"
+            [class.text-emerald-700]="viewMode() === 'card'"
+            [class.shadow-sm]="viewMode() === 'card'"
+            [class.text-slate-600]="viewMode() !== 'card'">
+            Cards
+          </button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="rounded-2xl border border-emerald-100 bg-white px-6 py-3 shadow-sm flex justify-center gap-3">
-            <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-500 text-center flex justify-center items-center">Units</p>
-            <p class="text-md font-semibold text-slate-900">{{ property.units?.length ?? 0 }}</p>
-          </div>
+        <button
+          (click)="openAddPropertyModal()"
+          class="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
+          <span class="text-base leading-none">+</span>
+          Add New Property
+        </button>
+      </div>
+    </div>
 
-          <button
-            (click)="openEditPropertyModal(property)"
-            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg">
-            Edit
-          </button>
+    <div
+      class="transition-all duration-300 ease-out"
+      [class.opacity-100]="viewMode() === 'table'"
+      [class.translate-y-0]="viewMode() === 'table'"
+      [class.opacity-0]="viewMode() !== 'table'"
+      [class.translate-y-1]="viewMode() !== 'table'"
+      [class.h-0]="viewMode() !== 'table'"
+      [class.overflow-hidden]="viewMode() !== 'table'">
 
-          <button
-            (click)="openArchivePropertyModal(property.id)"
-            class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-3 text-sm font-medium text-rose-600 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-rose-50 hover:shadow-lg">
-            Archive
-          </button>
+      <div class="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
 
-          <button
-            (click)="toggleUnitsVisibility(property.id)"
-            class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-5 py-3 text-sm font-medium text-sky-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-lg">
-            <span>{{ isUnitsVisible(property.id) ? 'Hide Units' : 'Show Units' }}</span>
-          </button>
 
-          <button 
-            (click)="openAddUnitModal(property.id)"
-            class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-lg">
-            <span class="text-base leading-none">+</span>
-            Add Unit
-          </button>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50/90">
+              <tr>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Property</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Units</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Location</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Status</th>
+                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngIf="filteredProperties().length === 0">
+                <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500">
+                  No properties match your search.
+                </td>
+              </tr>
+
+              <ng-container *ngFor="let property of filteredProperties()">
+                <tr class="align-top transition-colors hover:bg-emerald-50/30">
+                  <td class="px-6 py-5">
+                    <p class="text-sm font-semibold text-slate-900">{{ property.name }}</p>
+                    <p class="mt-2 inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      {{ (property.units?.length ?? 0) }} total units
+                    </p>
+                  </td>
+                  <td class="px-6 py-5 text-sm text-slate-600">
+                    <span *ngIf="(property.units?.length ?? 0) > 0">{{ property.units?.length }} unit(s)</span>
+                    <span *ngIf="(property.units?.length ?? 0) === 0" class="text-xs text-slate-500">No units yet</span>
+                  </td>
+                  <td class="px-6 py-5 text-sm text-slate-600">
+                    {{ formatPropertyLocation(property) || 'No location provided' }}
+                  </td>
+                  <td class="px-6 py-5">
+                    <span
+                      class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
+                      [class.border-emerald-200]="property.status === 'active'"
+                      [class.bg-emerald-50]="property.status === 'active'"
+                      [class.text-emerald-700]="property.status === 'active'"
+                      [class.border-slate-200]="property.status !== 'active'"
+                      [class.bg-slate-100]="property.status !== 'active'"
+                      [class.text-slate-600]="property.status !== 'active'">
+                      {{ property.status | titlecase }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-5">
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        (click)="openEditPropertyModal(property)"
+                        class="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 transition hover:bg-blue-100">
+                        Edit
+                      </button>
+                      <button
+                        (click)="toggleUnitsVisibility(property.id)"
+                        class="rounded-full border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200">
+                        {{ isUnitsVisible(property.id) ? 'Hide Units' : 'View Units' }}
+                      </button>
+                      <button
+                        (click)="openAddUnitModal(property.id)"
+                        class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100">
+                        Add Unit
+                      </button>
+                      <button
+                        (click)="openArchivePropertyModal(property.id)"
+                        class="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-100">
+                        Archive
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr *ngIf="isUnitsVisible(property.id)" class="bg-slate-50/70">
+                  <td colspan="5" class="px-6 pb-5">
+                    <div *ngIf="(property.units?.length ?? 0) === 0" class="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
+                      No units added yet.
+                    </div>
+
+                    <div *ngIf="(property.units?.length ?? 0) > 0" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      <div *ngFor="let unit of (property.units ?? [])" class="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div class="flex items-start justify-between gap-4">
+                          <div>
+                            <p class="text-sm font-semibold text-slate-900">Room {{ unit.room_number }}</p>
+                            <p class="text-xs text-slate-500">{{ unit.type | titlecase }}</p>
+                          </div>
+                          <p class="text-sm font-semibold text-slate-800">₱{{ unit.monthly_rent }}</p>
+                        </div>
+                        <p class="mt-3 text-xs text-slate-500">Capacity: {{ unit.capacity }} person(s)</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <div class="px-6 pt-6 sm:px-8">
-      <div class="overflow-hidden rounded-2xl border border-sky-100 bg-sky-50/40">
-        <img
-          *ngIf="property.image_url; else noPropertyImage"
-          [src]="property.image_url"
-          [alt]="property.name"
-          class="h-52 w-full object-cover sm:h-60">
-
-        <ng-template #noPropertyImage>
-          <div class="flex h-52 w-full items-center justify-center bg-gradient-to-br from-sky-50 to-emerald-50 text-sm font-medium text-slate-500 sm:h-60">
-            No property image uploaded
-          </div>
-        </ng-template>
-      </div>
-    </div>
-
-    <div *ngIf="isUnitsVisible(property.id)" class="p-6 sm:p-8">
-      <div *ngIf="(property.units?.length ?? 0) === 0" class="rounded-2xl border border-dashed border-sky-100 bg-sky-50/30 p-8 text-center text-sm text-slate-500">
-        No units added yet. Click Add Unit to get started.
+    <div
+      class="transition-all duration-300 ease-out"
+      [class.opacity-100]="viewMode() === 'card'"
+      [class.translate-y-0]="viewMode() === 'card'"
+      [class.opacity-0]="viewMode() !== 'card'"
+      [class.translate-y-1]="viewMode() !== 'card'"
+      [class.h-0]="viewMode() !== 'card'"
+      [class.overflow-hidden]="viewMode() !== 'card'">
+      <div *ngIf="filteredProperties().length === 0" class="rounded-3xl border border-dashed border-emerald-100 bg-white p-8 text-center text-sm text-slate-500">
+        No properties match your search.
       </div>
 
-      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" *ngIf="(property.units?.length ?? 0) > 0">
-        <div *ngFor="let unit of (property.units ?? [])" class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="text-lg font-semibold text-slate-900">Room {{ unit.room_number }}</p>
-              <p class="text-sm capitalize text-slate-500">{{ unit.type }}</p>
+      <div *ngFor="let property of filteredProperties()" class="mb-8 overflow-hidden rounded-[28px] border border-emerald-100 bg-white shadow-sm backdrop-blur-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_20px_45px_rgba(22,163,74,0.08)]">
+        <div class="border-b border-emerald-50 bg-gradient-to-r from-white via-slate-50 to-emerald-50/50 px-6 py-5 sm:px-8">
+          <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-white px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm">Property</span>
+                <span
+                  class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition"
+                  [class.border-emerald-200]="property.status === 'active'"
+                  [class.text-emerald-700]="property.status === 'active'"
+                  [class.bg-emerald-50]="property.status === 'active'"
+                  [class.border-slate-200]="property.status !== 'active'"
+                  [class.text-slate-700]="property.status !== 'active'"
+                  [class.bg-slate-100]="property.status !== 'active'">
+                  {{ property.status | titlecase }}
+                </span>
+              </div>
+
+              <div>
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{{ property.name }}</h2>
+                <p *ngIf="formatPropertyLocation(property)" class="mt-1 text-sm text-slate-500">
+                  {{ formatPropertyLocation(property) }}
+                </p>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="text-xl font-semibold text-slate-900">₱{{ unit.monthly_rent }}</p>
-              <p class="text-xs uppercase tracking-[0.14em] text-sky-400">per month</p>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="rounded-2xl border border-emerald-100 bg-white px-6 py-3 shadow-sm flex justify-center gap-3">
+                <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-600 text-center flex justify-center items-center">Units</p>
+                <p class="text-md font-semibold text-slate-900">{{ property.units?.length ?? 0 }}</p>
+              </div>
+
+              <button
+                (click)="openEditPropertyModal(property)"
+                class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-medium text-blue-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-lg">
+                Edit
+              </button>
+
+              <button
+                (click)="openArchivePropertyModal(property.id)"
+                class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-medium text-rose-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-lg">
+                Archive
+              </button>
+
+              <button
+                (click)="toggleUnitsVisibility(property.id)"
+                class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow-lg">
+                <span>{{ isUnitsVisible(property.id) ? 'Hide Units' : 'Show Units' }}</span>
+              </button>
+
+              <button
+                (click)="openAddUnitModal(property.id)"
+                class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-lg">
+                <span class="text-base leading-none">+</span>
+                Add Unit
+              </button>
             </div>
           </div>
+        </div>
 
-          <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
-            <span>Capacity</span>
-            <span class="font-medium text-slate-900">{{ unit.capacity }} person(s)</span>
+        <div class="px-6 pt-6 sm:px-8">
+          <div class="overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/30">
+            <img
+              *ngIf="property.image_url; else noPropertyImage"
+              [src]="property.image_url"
+              [alt]="property.name"
+              class="h-52 w-full object-cover sm:h-60">
+
+            <ng-template #noPropertyImage>
+              <div class="flex h-52 w-full items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50 text-sm font-medium text-slate-500 sm:h-60">
+                No property image uploaded
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <div *ngIf="isUnitsVisible(property.id)" class="p-6 sm:p-8">
+          <div *ngIf="(property.units?.length ?? 0) === 0" class="rounded-2xl border border-dashed border-emerald-100 bg-emerald-50/30 p-8 text-center text-sm text-slate-500">
+            No units added yet. Click Add Unit to get started.
+          </div>
+
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" *ngIf="(property.units?.length ?? 0) > 0">
+            <div *ngFor="let unit of (property.units ?? [])" class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-lg font-semibold text-slate-900">Room {{ unit.room_number }}</p>
+                  <p class="text-sm capitalize text-slate-500">{{ unit.type }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xl font-semibold text-slate-900">₱{{ unit.monthly_rent }}</p>
+                  <p class="text-xs uppercase tracking-[0.14em] text-emerald-500">per month</p>
+                </div>
+              </div>
+
+              <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+                <span>Capacity</span>
+                <span class="font-medium text-slate-900">{{ unit.capacity }} person(s)</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -49,13 +49,23 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () => import('./features/landlord/dashboard/landlord-dashboard')
-          .then(m => m.LandlordDashboard)
+          .then(m => m.LandlordDashboardComponent)
       },
       {
         path: 'properties',
         loadComponent: () => import('./features/landlord/properties/landlord-properties')
           .then(m => m.LandlordPropertiesComponent)
-      }
+      },
+      {
+        path: 'applications',
+        loadComponent: () => import('./features/landlord/applications/landlord-applications')
+          .then(m => m.LandlordApplications)
+      },
+      {
+        path: 'billing',
+        loadComponent: () => import('./features/landlord/billing/landlord-billing')
+          .then(m => m.LandlordBillingComponent)
+      },
     ]
   },
 

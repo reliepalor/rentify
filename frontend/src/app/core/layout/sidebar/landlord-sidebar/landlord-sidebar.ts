@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { SupabaseService } from '../../../services/supabase.service';
@@ -11,7 +11,7 @@ import { SupabaseService } from '../../../services/supabase.service';
 })
 export class LandlordSidebarComponent implements OnInit {
   @Input() isCollapsed = false;
-  landlordName = 'Landlord';
+  landlordName = signal('Landlord');
 
   constructor(
     private supabaseService: SupabaseService,
@@ -23,7 +23,7 @@ export class LandlordSidebarComponent implements OnInit {
       const profile = await this.supabaseService.getCurrentProfile();
       const fullName = profile?.full_name?.trim();
       if (fullName) {
-        this.landlordName = fullName;
+        this.landlordName.set(fullName);
       }
     } catch (error) {
       console.error('Unable to load landlord name:', error);
@@ -33,7 +33,7 @@ export class LandlordSidebarComponent implements OnInit {
   async logout() {
     try {
       await this.supabaseService.client.auth.signOut();
-      await this.router.navigate(['/login']);
+      await this.router.navigate(['/landing']);
     } catch (error) {
       console.error('Logout error:', error);
     }
