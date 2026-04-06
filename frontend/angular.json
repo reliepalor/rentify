@@ -22,8 +22,10 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "index": "src/index.html",
+            "tsConfig": "tsconfig.app.json",
+            "scripts": [],
             "assets": [
               {
                 "glob": "**/*",
