@@ -95,10 +95,11 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
   loginEmail = '';
   loginPassword = '';
 
-  registerFullName = '';
   registerEmail = '';
   registerPassword = '';
   registerConfirmPassword = '';
+  showRegisterPassword = false;
+  showRegisterConfirmPassword = false;
   selectedRole: 'tenant' | 'landlord' = 'tenant';
 
   authLoading = false;
@@ -127,11 +128,17 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.lastScrollY = window.scrollY || 0;
-    void this.handleOAuthReturnInPlace();
+
+    // Defer async auth mutations to the next macrotask to avoid NG0100 in dev mode.
+    window.setTimeout(() => {
+      void this.handleOAuthReturnInPlace();
+    }, 0);
 
     const { data } = this.supabaseService.client.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        void this.handleOAuthReturnInPlace();
+        window.setTimeout(() => {
+          void this.handleOAuthReturnInPlace();
+        }, 0);
       }
     });
 
@@ -253,7 +260,6 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
 
   async onRegisterSubmit(): Promise<void> {
     if (
-      !this.registerFullName ||
       !this.registerEmail ||
       !this.registerPassword ||
       !this.registerConfirmPassword
@@ -276,32 +282,55 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     this.loadingService.show('Creating your account...');
 
     try {
-      const { data, error } = await this.supabaseService.client.auth.signUp({
-        email: this.registerEmail,
+      const derivedFullName = this.deriveDisplayNameFromEmail(this.registerEmail);
+
+      let { data, error } = await this.supabaseService.client.auth.signUp({
+        email: this.registerEmail.trim().toLowerCase(),
         password: this.registerPassword,
         options: {
           data: {
-            full_name: this.registerFullName,
+            full_name: derivedFullName,
             role: this.selectedRole
           }
         }
       });
 
+      if (error) {
+        const retry = await this.supabaseService.client.auth.signUp({
+          email: this.registerEmail.trim().toLowerCase(),
+          password: this.registerPassword
+        });
+        data = retry.data;
+        error = retry.error;
+      }
+
+      // Supabase can obfuscate existing-email signups by returning a user with empty identities and no explicit error.
+      if (!error && this.isExistingEmailSignupResponse(data)) {
+        this.modalService.info('Account Already Exists', 'This email is already registered. Please sign in instead.');
+        return;
+      }
+
       if (error) throw error;
 
       if (data?.session && data.user?.id) {
-        await this.ensureProfileExists(data.user.id, this.selectedRole, this.registerFullName);
+        try {
+          await this.ensureProfileExists(data.user.id, this.selectedRole, derivedFullName);
+        } catch {
+          // Allow successful auth registration even if profile sync is delayed.
+        }
       }
 
       this.toastService.success('Account created. You can now sign in.', 3500);
-      this.authMode = 'login';
-      this.loginEmail = this.registerEmail;
+      // Avoid immediate authMode flips in the same check cycle (NG0100); keep the panel stable.
+      this.loginEmail = this.registerEmail.trim().toLowerCase();
       this.loginPassword = '';
-    } catch {
-      this.modalService.error('Registration Failed', 'Failed to create account. Please try again.');
+    } catch (error: any) {
+      this.modalService.error('Registration Failed', this.getRegistrationErrorMessage(error));
     } finally {
       this.loadingService.hide();
-      this.authLoading = false;
+      window.setTimeout(() => {
+        this.authLoading = false;
+      }, 0);
     }
   }
 
@@ -380,7 +409,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         const { error: metadataError } = await this.supabaseService.client.auth.updateUser({
           data: {
             role: normalizedRole,
-            full_name: user.user_metadata?.['full_name'] || this.registerFullName || null
+            full_name: user.user_metadata?.['full_name'] || null
           }
         });
 
@@ -391,7 +420,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         await this.ensureProfileExists(
           user.id,
           normalizedRole,
-          user.user_metadata?.['full_name'] || this.registerFullName || ''
+          user.user_metadata?.['full_name'] || this.deriveDisplayNameFromEmail(user.email || '')
         );
       }
 
@@ -477,6 +506,50 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     if (insertError) {
       throw new Error('Failed to process account profile');
     }
+  }
+
+  private getRegistrationErrorMessage(error: any): string {
+    const code = String(error?.code || '').toLowerCase();
+    const details = typeof error?.message === 'string' ? error.message : '';
+
+    if (code === 'email_address_invalid') {
+      return 'Please enter a valid email format, like yourname@gmail.com. Test domains like example.com are rejected.';
+    }
+
+    if (code === 'over_email_send_rate_limit') {
+      return 'Too many signup attempts in a short time. Please wait a few minutes, then try again.';
+    }
+
+    if (code === 'user_already_exists' || code === 'email_exists') {
+      return 'This email is already registered. Please sign in instead.';
+    }
+
+    return details || 'Failed to create account. Please try again.';
+  }
+
+  private isExistingEmailSignupResponse(data: any): boolean {
+    const user = data?.user;
+    if (!user) return false;
+
+    const identities = (user as any).identities;
+    return Array.isArray(identities) && identities.length === 0;
+  }
+
+  toggleRegisterPasswordVisibility(): void {
+    this.showRegisterPassword = !this.showRegisterPassword;
+  }
+
+  toggleRegisterConfirmPasswordVisibility(): void {
+    this.showRegisterConfirmPassword = !this.showRegisterConfirmPassword;
+  }
+
+  private deriveDisplayNameFromEmail(email: string): string {
+    const localPart = email.split('@')[0]?.trim() || 'User';
+    return localPart
+      .replace(/[._-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (character) => character.toUpperCase());
   }
 
   @HostListener('window:scroll')

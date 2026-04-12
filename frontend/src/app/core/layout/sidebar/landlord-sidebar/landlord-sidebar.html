@@ -42,6 +42,14 @@
         </svg>
         <span [class.hidden]="isCollapsed">Billing & Payments</span>
       </a>
+
+      <a routerLink="/landlord/rentals" routerLinkActive="bg-emerald-50 text-emerald-700"
+         class="group flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 1v22M17 5.5a4 4 0 0 0-4-2.5H10a4 4 0 0 0 0 8h4a4 4 0 1 1 0 8H9a4 4 0 0 1-4-3" />
+        </svg>
+        <span [class.hidden]="isCollapsed">Rentals</span>
+      </a>
     </nav>
   </div>
 

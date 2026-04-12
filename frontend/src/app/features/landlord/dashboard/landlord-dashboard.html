@@ -14,23 +14,35 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      <div class="bg-white rounded-3xl p-6 shadow-sm">
+      <button
+        type="button"
+        (click)="openPropertiesRecordsModal()"
+        class="bg-white rounded-3xl p-6 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-md">
         <p class="text-sm text-slate-500">Total Properties</p>
         <p class="text-4xl font-bold text-slate-900 mt-2">{{ displayTotalProperties() }}</p>
-      </div>
-      <div class="bg-white rounded-3xl p-6 shadow-sm">
+      </button>
+      <button
+        type="button"
+        (click)="openUnitsRecordsModal()"
+        class="bg-white rounded-3xl p-6 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-md">
         <p class="text-sm text-slate-500">Total Units</p>
         <p class="text-4xl font-bold text-slate-900 mt-2">{{ displayTotalUnits() }}</p>
-      </div>
-      <div class="bg-white rounded-3xl p-6 shadow-sm">
+      </button>
+      <button
+        type="button"
+        (click)="openActiveTenantsRecordsModal()"
+        class="bg-white rounded-3xl p-6 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-md">
         <p class="text-sm text-slate-500">Active Tenants</p>
         <p class="text-4xl font-bold text-emerald-600 mt-2">{{ displayActiveTenants() }}</p>
-      </div>
-      <div class="bg-white rounded-3xl p-6 shadow-sm">
+      </button>
+      <button
+        type="button"
+        (click)="openRevenueRecordsModal()"
+        class="bg-white rounded-3xl p-6 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-md">
         <p class="text-sm text-slate-500">Total Revenue (All Time)</p>
         <p class="text-4xl font-bold text-emerald-600 mt-2">₱{{ displayMonthlyRevenue() }}</p>
         <p class="text-xs text-slate-500 mt-2">This month: ₱{{ currentMonthRevenue() }}</p>
-      </div>
+      </button>
     </div>
 
     <!-- Charts Row -->

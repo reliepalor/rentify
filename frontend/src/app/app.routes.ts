@@ -66,6 +66,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/landlord/billing/landlord-billing')
           .then(m => m.LandlordBillingComponent)
       },
+      {
+        path: 'rentals',
+        loadComponent: () => import('./features/landlord/rentals/landlord-rentals')
+          .then(m => m.LandlordRentalsComponent)
+      }
     ]
   },
 

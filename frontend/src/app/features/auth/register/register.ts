@@ -15,7 +15,6 @@ import { ToastService } from '../../../shared/services/toast.service';
 })
 export class RegisterComponent implements OnInit {
 
-  fullName: string = '';
   email: string = '';
   password: string = '';
   confirmPassword: string = '';
@@ -23,7 +22,10 @@ export class RegisterComponent implements OnInit {
   loading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
   private isHandlingOAuthCallback: boolean = false;
+  private readonly oauthIntentKey: string = 'register_google_intent';
 
   constructor(
     private supabaseService: SupabaseService,
@@ -48,6 +50,9 @@ export class RegisterComponent implements OnInit {
 
   async checkGoogleAuthAndFinishRegistration() {
     if (this.isHandlingOAuthCallback) return;
+
+    const isGoogleRegistrationFlow = sessionStorage.getItem(this.oauthIntentKey) === '1';
+    if (!isGoogleRegistrationFlow) return;
 
     try {
       this.isHandlingOAuthCallback = true;
@@ -80,6 +85,7 @@ export class RegisterComponent implements OnInit {
       await this.ensureProfileExists(user.id, roleToApply, user.user_metadata?.['full_name'] || null);
 
       sessionStorage.removeItem('selected_role');
+        sessionStorage.removeItem(this.oauthIntentKey);
 
       this.toastService.success('Google sign up successful. Redirecting...');
       this.router.navigate([roleToApply === 'landlord' ? '/landlord' : '/tenant']);
@@ -157,6 +163,7 @@ export class RegisterComponent implements OnInit {
     try {
       // Store selected role before redirecting to Google
       sessionStorage.setItem('selected_role', this.selectedRole);
+      sessionStorage.setItem(this.oauthIntentKey, '1');
 
       const { error } = await this.supabaseService.client.auth.signInWithOAuth({
         provider: 'google',
@@ -169,12 +176,13 @@ export class RegisterComponent implements OnInit {
 
     } catch (error: any) {
       this.modalService.error('Google Sign Up Failed', 'Unable to continue with Google. Please try again.');
+      sessionStorage.removeItem(this.oauthIntentKey);
       this.loading = false;
     }
   }
 
   async onRegister() {
-    if (!this.fullName || !this.email || !this.password || !this.confirmPassword) {
+    if (!this.email || !this.password || !this.confirmPassword) {
       this.modalService.info('Missing Information', 'Please fill in all required fields.');
       return;
     }
@@ -195,22 +203,40 @@ export class RegisterComponent implements OnInit {
     this.loadingService.show('Creating your account...');
 
     try {
+      const derivedFullName = this.deriveDisplayNameFromEmail(this.email);
+
       // 1. Create user in Supabase Auth
-      const { data, error } = await this.supabaseService.client.auth.signUp({
-        email: this.email,
+      let { data, error } = await this.supabaseService.client.auth.signUp({
+        email: this.email.trim().toLowerCase(),
         password: this.password,
         options: {
           data: {
-            full_name: this.fullName,
+            full_name: derivedFullName,
             role: this.selectedRole.toLowerCase()
           }
         }
       });
 
+      // Fallback path: retry with minimal payload if metadata/signup settings reject the first attempt.
+      if (error) {
+        const retry = await this.supabaseService.client.auth.signUp({
+          email: this.email.trim().toLowerCase(),
+          password: this.password
+        });
+
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (error) throw error;
 
       if (data?.session && data.user?.id) {
-        await this.ensureProfileExists(data.user.id, this.selectedRole, this.fullName || null);
+        try {
+          await this.ensureProfileExists(data.user.id, this.selectedRole, derivedFullName || null);
+        } catch (profileError) {
+          // Do not block successful auth registration if profile sync is delayed.
+          console.warn('Profile sync warning after signup:', profileError);
+        }
       }
 
       const needsEmailVerification = !data.session;
@@ -225,11 +251,48 @@ export class RegisterComponent implements OnInit {
       }, 2500);
 
     } catch (error: any) {
-      this.modalService.error('Registration Failed', 'Failed to create account. Please try again.');
-      console.error('Registration failed.');
+      const message = this.getRegistrationErrorMessage(error);
+      this.modalService.error('Registration Failed', message);
+      console.error('Registration failed:', error);
     } finally {
       this.loadingService.hide();
       this.loading = false;
     }
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  private deriveDisplayNameFromEmail(email: string): string {
+    const localPart = email.split('@')[0]?.trim() || 'User';
+    return localPart
+      .replace(/[._-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+  }
+
+  private getRegistrationErrorMessage(error: any): string {
+    const code = String(error?.code || '').toLowerCase();
+    const details = typeof error?.message === 'string' ? error.message : '';
+
+    if (code === 'email_address_invalid') {
+      return 'Please enter a valid email format, like yourname@gmail.com. Test domains like example.com are rejected.';
+    }
+
+    if (code === 'over_email_send_rate_limit') {
+      return 'Too many signup attempts in a short time. Please wait a few minutes, then try again.';
+    }
+
+    if (code === 'user_already_exists' || code === 'email_exists') {
+      return 'This email is already registered. Please sign in instead.';
+    }
+
+    return details || 'Failed to create account. Please try again.';
   }
 }
