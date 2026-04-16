@@ -124,29 +124,28 @@ export class LandlordApplications implements OnInit {
     }
 
     async confirmAction() {
-        if (!this.selectedApplication || !this.actionType) return;
+    if (!this.selectedApplication || !this.actionType) return;
 
-        const newStatus = this.actionType === 'approve' ? 'approved' : 'rejected';
-        const actionLabel = this.actionType === 'approve' ? 'approved' : 'rejected';
+    const newStatus = this.actionType === 'approve' ? 'approved' : 'rejected';
 
-        try{
-            const { data, error } = await this.supabaseService.client
-                .from('tenant_applications')
-                .update({ status: newStatus })
-                .eq('id', this.selectedApplication.id)
-                .select('id, status')
-                .single();
+    try {
+        // 1. Update application status
+        const { error: appError } = await this.supabaseService.client
+        .from('tenant_applications')
+        .update({ status: newStatus })
+        .eq('id', this.selectedApplication.id);
 
-            if(error) throw error;
-            if (!data) throw new Error('Application was not updated.');
+        if (appError) throw appError;
 
-            this.toastService.success(`Application ${actionLabel} successfully!`);
-            this.closeConfirmModal();
-            await this.loadApplications();
-        } catch (error) {
-            console.error('Error updating application:', error);
-            this.toastService.error(`Failed to ${this.actionType} application`);
-        }
+        // Rental creation is handled by a database trigger when status becomes approved.
 
+        this.toastService.success(`Application ${newStatus} successfully!`);
+        this.closeConfirmModal();
+        await this.loadApplications();
+
+    } catch (error) {
+        console.error('Error:', error);
+        this.toastService.error(`Failed to ${newStatus} application`);
+    }
     }
 }

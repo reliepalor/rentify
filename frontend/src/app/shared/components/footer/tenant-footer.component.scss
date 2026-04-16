@@ -1,0 +1,15 @@
+/* Footer animations and styles */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+footer {
+  animation: fadeInUp 0.8s ease-out 0.3s backwards;
+}

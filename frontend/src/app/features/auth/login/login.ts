@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { LandlordService } from '../../../core/services/landlord.service';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { ModalService } from '../../../shared/services/modal.service';
 import { ToastService } from '../../../shared/services/toast.service';
@@ -19,9 +20,12 @@ export class LoginComponent implements OnInit {
   password: string = '';
   loading: boolean = false;
   errorMessage: string = '';
+  private readonly landlordDraftKey = 'register_landlord_draft';
+  private readonly landlordReviewWaitKey = 'landlord_review_wait';
 
   constructor(
     private supabaseService: SupabaseService,
+    private landlordService: LandlordService,
     private router: Router,
     private loadingService: LoadingService,
     private modalService: ModalService,
@@ -58,7 +62,8 @@ export class LoginComponent implements OnInit {
             this.router.navigate(['/admin']);
             break;
           case 'landlord':
-            this.router.navigate(['/landlord']);
+            await this.syncPendingLandlordVerification(profile.id);
+            await this.routeLandlordByVerification(profile.id);
             break;
           case 'tenant':
             this.router.navigate(['/tenant']);
@@ -105,9 +110,18 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      this.toastService.success('Login successful');
-
       const roleToCheck = (profile.role as string).toLowerCase().trim();
+
+      if (roleToCheck === 'landlord') {
+        await this.syncPendingLandlordVerification(profile.id);
+        const canAccessLandlord = await this.routeLandlordByVerification(profile.id);
+        if (canAccessLandlord) {
+          this.toastService.success('Login successful');
+        }
+        return;
+      }
+
+      this.toastService.success('Login successful');
       
       // Role-based redirect
       switch (roleToCheck) {
@@ -132,6 +146,93 @@ export class LoginComponent implements OnInit {
       this.loadingService.hide();
       this.loading = false;
     }
+  }
+
+  private async syncPendingLandlordVerification(userId: string): Promise<void> {
+    const rawDraft = sessionStorage.getItem(this.landlordDraftKey);
+    if (!rawDraft) return;
+
+    try {
+      const draft = JSON.parse(rawDraft) as {
+        full_name: string;
+        contact_number: string;
+        documents: Record<string, { fileName: string; mimeType: string; dataUrl: string }>;
+      };
+
+      const documents = [
+        { type: 'business_permit', file: draft.documents['business_permit'] },
+        { type: 'barangay_clearance', file: draft.documents['barangay_clearance'] },
+        { type: 'valid_id', file: draft.documents['valid_id'] }
+      ];
+
+      await Promise.all(
+        documents.map(async (document) => {
+          const storagePath = `${userId}/${document.type}/${Date.now()}-${document.file.fileName}`;
+          const fileBlob = await this.dataUrlToBlob(document.file.dataUrl);
+
+          const { error: uploadError } = await this.supabaseService.client.storage
+            .from('landlord-documents')
+            .upload(storagePath, fileBlob, {
+              contentType: document.file.mimeType,
+              upsert: true
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { error: insertError } = await this.supabaseService.client
+            .from('documents')
+            .upsert(
+              {
+                landlord_id: userId,
+                type: document.type,
+                file_url: storagePath,
+                uploaded_at: new Date().toISOString()
+              },
+              {
+                onConflict: 'landlord_id,type'
+              }
+            );
+
+          if (insertError) {
+            throw insertError;
+          }
+        })
+      );
+
+      sessionStorage.removeItem(this.landlordDraftKey);
+    } catch (error) {
+      console.warn('Unable to sync pending landlord documents during login.', error);
+    }
+  }
+
+  private async routeLandlordByVerification(userId: string): Promise<boolean> {
+    const summary = await this.landlordService.getLandlordVerificationSummary(userId);
+
+    if (!summary || summary.status === 'pending' || summary.status === 'resubmission_required') {
+      const message = 'Thanks for signing up! Your landlord account is still under review. Please try logging in again once the admin approves your account.';
+      sessionStorage.setItem(this.landlordReviewWaitKey, message);
+      this.modalService.info('Account Not Yet Approved', message);
+      await this.router.navigate(['/landing']);
+      return false;
+    }
+
+    if (summary.status === 'rejected') {
+      const message = 'Your landlord verification was rejected. Please check your email for the admin remarks and next steps.';
+      sessionStorage.setItem(this.landlordReviewWaitKey, message);
+      this.modalService.error('Verification Rejected', 'Your landlord verification was rejected. Please check your email for the admin remarks and next steps.');
+      await this.router.navigate(['/landing']);
+      return false;
+    }
+
+    await this.router.navigate(['/landlord']);
+    return true;
+  }
+
+  private async dataUrlToBlob(dataUrl: string): Promise<Blob> {
+    const response = await fetch(dataUrl);
+    return response.blob();
   }
 
   // Google / Gmail Login

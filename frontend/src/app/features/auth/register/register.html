@@ -31,18 +31,6 @@
 
       <!-- Form -->
       <form (ngSubmit)="onRegister()" class="space-y-6">
-        
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-          <input 
-            type="text" 
-            [(ngModel)]="fullName"
-            name="fullName"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Juan Dela Cruz">
-        </div>
-
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
           <input 
@@ -56,24 +44,58 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input 
-            type="password" 
-            [(ngModel)]="password"
-            name="password"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••">
+          <div class="relative">
+            <input 
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              required
+              class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••">
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.584 10.587A2 2 0 0012 14a2 2 0 001.413-3.415" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.09A9.77 9.77 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.748 9.748 0 01-4.098 5.135M6.228 6.228A9.75 9.75 0 002.458 12c1.274 4.057 5.065 7 9.542 7a9.77 9.77 0 005.09-1.424" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-          <input 
-            type="password" 
-            [(ngModel)]="confirmPassword"
-            name="confirmPassword"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••">
+          <div class="relative">
+            <input 
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+              class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••">
+            <button
+              type="button"
+              (click)="toggleConfirmPasswordVisibility()"
+              class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+              [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'">
+              <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.584 10.587A2 2 0 0012 14a2 2 0 001.413-3.415" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.09A9.77 9.77 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.748 9.748 0 01-4.098 5.135M6.228 6.228A9.75 9.75 0 002.458 12c1.274 4.057 5.065 7 9.542 7a9.77 9.77 0 005.09-1.424" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div>
@@ -94,6 +116,9 @@
               Landlord
             </button>
           </div>
+          <p *ngIf="selectedRole === 'landlord'" class="mt-3 text-xs text-amber-700">
+            Landlord registration requires verification documents before account creation.
+          </p>
         </div>
 
         <!-- Register Button -->
@@ -101,7 +126,7 @@
           type="submit"
           [disabled]="loading"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3.5 rounded-2xl transition-all duration-200">
-          {{ loading ? 'Creating Account...' : 'Create Account' }}
+          {{ loading ? 'Creating Account...' : (selectedRole === 'landlord' ? 'Submit Landlord Application' : 'Create Account') }}
         </button>
       </form>
 
@@ -116,6 +141,87 @@
 
     <div class="text-center mt-6">
       <a routerLink="/" class="text-gray-500 hover:text-gray-700 text-sm">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showLandlordModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+  <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Landlord Verification Details</h2>
+        <p class="mt-1 text-sm text-gray-600">
+          Upload the required documents so the admin can verify your landlord account.
+        </p>
+      </div>
+      <button type="button" (click)="closeLandlordModal()" class="text-gray-400 hover:text-gray-700" aria-label="Close landlord verification form">
+        ✕
+      </button>
+    </div>
+
+    <div class="mt-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <input
+          type="text"
+          [(ngModel)]="landlordFullName"
+          name="landlordFullName"
+          class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Juan Dela Cruz"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+        <input
+          type="text"
+          [(ngModel)]="landlordContactNumber"
+          name="landlordContactNumber"
+          class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="09xxxxxxxxx"
+        />
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Business Permit</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'business_permit')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.business_permit || 'No file selected' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Barangay Clearance</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'barangay_clearance')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.barangay_clearance || 'No file selected' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Valid ID</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'valid_id')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.valid_id || 'No file selected' }}</p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-blue-50 p-4 text-sm text-blue-800">
+        The uploaded files will be stored in Database and linked to your landlord application for Admin review.
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        (click)="closeLandlordModal()"
+        class="rounded-2xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="saveLandlordVerificationDetails()"
+        class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+      >
+        Save Verification Details
+      </button>
     </div>
   </div>
 </div>

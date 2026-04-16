@@ -2,6 +2,7 @@ import { Component, OnInit, signal, ViewChild, ElementRef, AfterViewInit, OnDest
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { ModalService } from '../../../shared/services/modal.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { Chart, registerables } from 'chart.js';
 
@@ -37,6 +38,10 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
   recentApplications = signal<any[]>([]);
   recentPayments = signal<any[]>([]);
   overdueBills = signal<any[]>([]);
+  propertyRows = signal<any[]>([]);
+  unitRows = signal<any[]>([]);
+  activeTenantRows = signal<any[]>([]);
+  paidBillingRows = signal<any[]>([]);
 
   private revenueChart: Chart | null = null;
   private occupancyChart: Chart | null = null;
@@ -51,6 +56,7 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   constructor(
     private supabaseService: SupabaseService,
+    private modalService: ModalService,
     private toastService: ToastService,
     private router: Router
   ) {}
@@ -292,6 +298,10 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.currentMonthRevenue.set(0);
         this.occupancyRate.set(0);
         this.occupiedUnitsCount.set(0);
+        this.propertyRows.set([]);
+        this.unitRows.set([]);
+        this.activeTenantRows.set([]);
+        this.paidBillingRows.set([]);
         this.recentApplications.set([]);
         this.recentPayments.set([]);
         this.overdueBills.set([]);
@@ -300,14 +310,26 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
         return;
       }
 
+      this.propertyRows.set(properties || []);
+
       const { data: units, error: unitsError } = await this.supabaseService.client
         .from('units')
-        .select('id, property_id')
+        .select(`
+          id,
+          property_id,
+          room_number,
+          type,
+          capacity,
+          monthly_rent,
+          status,
+          property:property_id (name)
+        `)
         .in('property_id', propertyIds);
 
       if (unitsError) throw unitsError;
 
       const unitIds = (units || []).map((unit: any) => unit.id);
+      this.unitRows.set(units || []);
       this.totalUnits.set(unitIds.length);
 
       if (unitIds.length === 0) {
@@ -316,6 +338,8 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.currentMonthRevenue.set(0);
         this.occupancyRate.set(0);
         this.occupiedUnitsCount.set(0);
+        this.activeTenantRows.set([]);
+        this.paidBillingRows.set([]);
         this.recentApplications.set([]);
         this.recentPayments.set([]);
         this.overdueBills.set([]);
@@ -336,7 +360,15 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
       const [approvedResult, billingsResult, totalRevenueResult] = await Promise.all([
         this.supabaseService.client
           .from('tenant_applications')
-          .select('tenant_id, unit_id')
+          .select(`
+            tenant_id,
+            unit_id,
+            tenant:tenant_id (full_name, contact_number),
+            unit:unit_id (
+              room_number,
+              property:property_id (name)
+            )
+          `)
           .in('unit_id', unitIds)
           .eq('status', 'approved'),
         this.supabaseService.client
@@ -347,9 +379,17 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
           .order('billing_month', { ascending: true }),
         this.supabaseService.client
           .from('billings')
-          .select('total_amount')
+          .select(`
+            id,
+            total_amount,
+            billing_month,
+            due_date,
+            tenant:tenant_id (full_name),
+            property:property_id (name),
+            unit:unit_id (room_number)
+          `)
           .eq('status', 'paid')
-          .order('billing_month', { ascending: true })
+          .order('billing_month', { ascending: false })
       ]);
 
       if (approvedResult.error) throw approvedResult.error;
@@ -365,6 +405,19 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
         (approvedResult.data || []).map((application: any) => application.unit_id)
       );
       this.occupiedUnitsCount.set(approvedOccupiedUnits.size);
+
+      const activeTenantMap = new Map<string, any>();
+      (approvedResult.data || []).forEach((application: any) => {
+        const tenantId = String(application.tenant_id || '');
+        if (!tenantId || activeTenantMap.has(tenantId)) return;
+        activeTenantMap.set(tenantId, {
+          tenantName: application.tenant?.full_name || 'Unknown Tenant',
+          contactNumber: application.tenant?.contact_number || 'N/A',
+          propertyName: application.unit?.property?.name || 'Unknown Property',
+          roomNumber: application.unit?.room_number || 'N/A'
+        });
+      });
+      this.activeTenantRows.set(Array.from(activeTenantMap.values()));
 
       const paidBillings = billingsResult.data || [];
 
@@ -390,6 +443,8 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
         (sum: number, billing: any) => sum + Number(billing.total_amount || 0),
         0
       );
+
+      this.paidBillingRows.set(totalRevenueResult.data || []);
 
       this.monthlyRevenue.set(totalRevenueAllTime);
 
@@ -619,5 +674,93 @@ export class LandlordDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   goToBilling() {
     this.router.navigate(['/landlord/billing']);
+  }
+
+  openPropertiesRecordsModal(): void {
+    this.modalService.open({
+      type: 'info',
+      title: 'Property Records',
+      message: 'List of your properties.',
+      table: {
+        columns: [
+          { key: 'name', label: 'Property' },
+          { key: 'units', label: 'Total Units' }
+        ],
+        rows: this.propertyRows().map((property: any) => ({
+          name: property.name || 'Unnamed Property',
+          units: property.total_units ?? 'N/A'
+        })),
+        emptyMessage: 'No properties found.'
+      }
+    });
+  }
+
+  openUnitsRecordsModal(): void {
+    this.modalService.open({
+      type: 'info',
+      title: 'Unit Records',
+      message: 'List of your units.',
+      table: {
+        columns: [
+          { key: 'property', label: 'Property' },
+          { key: 'room', label: 'Room' },
+          { key: 'type', label: 'Type' },
+          { key: 'status', label: 'Status' }
+        ],
+        rows: this.unitRows().map((unit: any) => ({
+          property: unit.property?.name || 'Unknown Property',
+          room: unit.room_number || 'N/A',
+          type: unit.type || 'N/A',
+          status: unit.status || 'N/A'
+        })),
+        emptyMessage: 'No units found.'
+      }
+    });
+  }
+
+  openActiveTenantsRecordsModal(): void {
+    this.modalService.open({
+      type: 'info',
+      title: 'Active Tenant Records',
+      message: 'Tenants with approved applications in your units.',
+      table: {
+        columns: [
+          { key: 'tenantName', label: 'Tenant' },
+          { key: 'contactNumber', label: 'Contact' },
+          { key: 'propertyName', label: 'Property' },
+          { key: 'roomNumber', label: 'Unit' }
+        ],
+        rows: this.activeTenantRows(),
+        emptyMessage: 'No active tenants found.'
+      }
+    });
+  }
+
+  openRevenueRecordsModal(): void {
+    this.modalService.open({
+      type: 'info',
+      title: 'Revenue Records',
+      message: 'All paid billings included in total revenue.',
+      table: {
+        columns: [
+          { key: 'tenant', label: 'Tenant' },
+          { key: 'property', label: 'Property' },
+          { key: 'unit', label: 'Unit' },
+          { key: 'billingMonth', label: 'Billing Month' },
+          { key: 'amount', label: 'Amount' }
+        ],
+        rows: this.paidBillingRows().map((billing: any) => ({
+          tenant: billing.tenant?.full_name || 'Unknown Tenant',
+          property: billing.property?.name || 'Unknown Property',
+          unit: billing.unit?.room_number || 'N/A',
+          billingMonth: String(billing.billing_month || '').slice(0, 7) || 'N/A',
+          amount: `PHP ${Number(billing.total_amount || 0).toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`
+        })),
+        emptyMessage: 'No paid billing records found.'
+      }
+    });
   }
 }

@@ -2,12 +2,24 @@ import { Injectable, signal } from '@angular/core';
 
 export type ModalType = 'info' | 'success' | 'error';
 
+export interface ModalTableColumn {
+  key: string;
+  label: string;
+}
+
+export interface ModalTableConfig {
+  columns: ModalTableColumn[];
+  rows: Record<string, unknown>[];
+  emptyMessage?: string;
+}
+
 export interface ModalState {
   isOpen: boolean;
   type: ModalType;
   title: string;
   message: string;
   confirmText: string;
+  table: ModalTableConfig | null;
 }
 
 @Injectable({
@@ -19,7 +31,8 @@ export class ModalService {
     type: 'info',
     title: '',
     message: '',
-    confirmText: 'OK'
+    confirmText: 'OK',
+    table: null
   });
 
   open(config: {
@@ -27,13 +40,15 @@ export class ModalService {
     title: string;
     message: string;
     confirmText?: string;
+    table?: ModalTableConfig | null;
   }): void {
     this.state.set({
       isOpen: true,
       type: config.type ?? 'info',
       title: config.title,
       message: config.message,
-      confirmText: config.confirmText ?? 'OK'
+      confirmText: config.confirmText ?? 'OK',
+      table: config.table ?? null
     });
   }
 

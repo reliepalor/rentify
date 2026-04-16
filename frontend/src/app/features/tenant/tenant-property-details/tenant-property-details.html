@@ -1,0 +1,148 @@
+<app-header></app-header>
+
+<section class="pt-28 pb-16 bg-gradient-to-b from-stone-100 to-white min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 md:px-10">
+    <div class="mb-8">
+      <button
+        (click)="backToListings()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Listings
+      </button>
+    </div>
+
+    <div *ngIf="loading()" class="text-center py-16">
+      <div class="inline-block">
+        <div class="w-12 h-12 border-4 border-stone-300 border-t-emerald-600 rounded-full animate-spin"></div>
+      </div>
+      <p class="text-stone-600 mt-4">Loading property details...</p>
+    </div>
+
+    <div *ngIf="!loading() && notFound()" class="bg-white border border-stone-200 rounded-2xl p-10 text-center">
+      <h1 class="text-2xl font-semibold text-stone-900 mb-2">Property Not Found</h1>
+      <p class="text-stone-600 mb-6">The property does not exist or is not currently available.</p>
+      <a
+        routerLink="/tenant-landing"
+        class="inline-flex items-center px-5 py-3 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
+      >
+        Browse Other Properties
+      </a>
+    </div>
+
+    <div *ngIf="!loading() && property() as selectedProperty" class="space-y-8">
+      <article class="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+        <div class="grid lg:grid-cols-2 gap-0">
+          <div class="h-72 lg:h-full bg-stone-200">
+            <img
+              *ngIf="selectedProperty.image_url"
+              [src]="selectedProperty.image_url"
+              [alt]="selectedProperty.name"
+              class="w-full h-full object-cover"
+            />
+            <div *ngIf="!selectedProperty.image_url" class="w-full h-full flex items-center justify-center">
+              <svg class="w-16 h-16 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="p-8 lg:p-10">
+            <div class="mb-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+              {{ units().length }} Available Units
+            </div>
+
+            <h1 class="text-3xl md:text-4xl font-semibold text-stone-900 mb-3">{{ selectedProperty.name }}</h1>
+            <p class="text-stone-600 mb-6">{{ getPropertyLocation(selectedProperty) }}</p>
+
+            <div class="mb-6 grid sm:grid-cols-2 gap-4">
+              <div class="rounded-xl bg-stone-50 border border-stone-200 p-4">
+                <p class="text-xs uppercase tracking-wide text-stone-500 mb-1">Starting Price</p>
+                <p class="text-2xl font-bold text-emerald-700">₱{{ getMinUnitPrice() | number }}</p>
+              </div>
+              <div class="rounded-xl bg-stone-50 border border-stone-200 p-4">
+                <p class="text-xs uppercase tracking-wide text-stone-500 mb-1">Address</p>
+                <p class="text-sm font-medium text-stone-800">{{ selectedProperty.address || 'Not provided' }}</p>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <h2 class="text-sm font-semibold text-stone-900 mb-2 uppercase tracking-wide">Description</h2>
+              <p class="text-stone-700 leading-relaxed">
+                {{ selectedProperty.description || 'No description available for this property.' }}
+              </p>
+            </div>
+
+            <div *ngIf="formatAmenities(selectedProperty.amenities).length > 0" class="mb-6">
+              <h2 class="text-sm font-semibold text-stone-900 mb-2 uppercase tracking-wide">Amenities</h2>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  *ngFor="let amenity of formatAmenities(selectedProperty.amenities)"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700"
+                >
+                  {{ amenity }}
+                </span>
+              </div>
+            </div>
+
+            <div *ngIf="selectedProperty.house_rules" class="rounded-xl bg-amber-50 border border-amber-200 p-4">
+              <h2 class="text-sm font-semibold text-amber-900 mb-1 uppercase tracking-wide">House Rules</h2>
+              <p class="text-sm text-amber-900">{{ selectedProperty.house_rules }}</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8 lg:p-10">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-semibold text-stone-900">Available Units</h2>
+          <span class="text-sm text-stone-500">{{ units().length }} total</span>
+        </div>
+
+        <div *ngIf="units().length === 0" class="text-center py-10 border border-dashed border-stone-300 rounded-2xl">
+          <p class="text-stone-600">No approved units are available right now.</p>
+        </div>
+
+        <div *ngIf="units().length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <article
+            *ngFor="let unit of units()"
+            class="rounded-2xl border border-stone-200 bg-stone-50 p-5 hover:shadow-md transition-all"
+          >
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <h3 class="text-lg font-semibold text-stone-900">Room {{ unit.room_number }}</h3>
+              <span
+                class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                [ngClass]="{
+                  'bg-emerald-100 text-emerald-700': unit.status === 'available',
+                  'bg-orange-100 text-orange-700': unit.status === 'occupied',
+                  'bg-stone-200 text-stone-700': unit.status === 'maintenance'
+                }"
+              >
+                {{ unit.status | titlecase }}
+              </span>
+            </div>
+
+            <div class="space-y-2 text-sm text-stone-700">
+              <p><span class="font-medium text-stone-900">Type:</span> {{ unit.type | titlecase }}</p>
+              <p><span class="font-medium text-stone-900">Capacity:</span> {{ unit.capacity }} tenant(s)</p>
+              <p><span class="font-medium text-stone-900">Monthly Rent:</span> ₱{{ unit.monthly_rent | number }}</p>
+            </div>
+
+            <button
+              type="button"
+              (click)="applyForUnit(unit)"
+              [disabled]="applyingUnitId() === unit.id || unit.status !== 'available' || isUnitAlreadyApplied(unit.id)"
+              class="w-full mt-5 px-4 py-2.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-emerald-700"
+            >
+              {{ getApplyButtonText(unit) }}
+            </button>
+          </article>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<app-tenant-footer></app-tenant-footer>
