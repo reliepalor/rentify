@@ -24,6 +24,10 @@ export interface Property {
   amenities: any;
   house_rules: string | null;
   status: 'active' | 'inactive';
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  approval_remarks?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
   created_at: string;
   updated_at: string;
   
@@ -38,6 +42,10 @@ export interface Unit {
   capacity: number;
   monthly_rent: number;
   status: 'available' | 'occupied' | 'maintenance';
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  approval_remarks?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
   created_at: string;
   updated_at: string;
 }

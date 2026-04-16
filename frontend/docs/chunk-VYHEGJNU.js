@@ -1,0 +1,1 @@
+import{I as a,ca as s}from"./chunk-SPMCAPNZ.js";var t=class e{visible=s(!1);message=s("Please wait...");show(i="Please wait..."){this.message.set(i),this.visible.set(!0)}hide(){this.visible.set(!1)}static \u0275fac=function(o){return new(o||e)};static \u0275prov=a({token:e,factory:e.\u0275fac,providedIn:"root"})};export{t as a};

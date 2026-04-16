@@ -1,16 +1,38 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { LandlordService, LandlordVerificationStatus } from '../../../core/services/landlord.service';
 import { LoadingService } from '../../services/loading.service';
 import { ModalService } from '../../services/modal.service';
 import { ToastService } from '../../services/toast.service';
+import { Subscription } from 'rxjs';
+
+type LandlordDocumentType = 'business_permit' | 'barangay_clearance' | 'valid_id';
+
+interface LandlordDocumentDraft {
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;
+}
+
+interface LandlordRegistrationDraft {
+  full_name: string;
+  contact_number: string;
+  documents: Record<LandlordDocumentType, LandlordDocumentDraft>;
+}
+
+interface MenuItem {
+  label: string;
+  href: string;
+  active: boolean;
+}
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './tenant-header.component.html',
   styles: [`
     .tenant-glass-header {
@@ -91,6 +113,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
   isAuthPanelOpen = false;
   isAuthPanelMounted = false;
   authMode: 'login' | 'register' = 'login';
+  isLoggedIn = false;
 
   loginEmail = '';
   loginPassword = '';
@@ -101,25 +124,46 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
   showRegisterPassword = false;
   showRegisterConfirmPassword = false;
   selectedRole: 'tenant' | 'landlord' = 'tenant';
+  showLandlordModal = false;
+  showContinueRegistrationModal = false;
+  showReviewWaitModal = false;
+  continueRegistrationMessage = '';
+  reviewWaitMessage = '';
+  landlordFullName = '';
+  landlordContactNumber = '';
+  landlordDocumentFiles: Record<LandlordDocumentType, File | null> = {
+    business_permit: null,
+    barangay_clearance: null,
+    valid_id: null
+  };
+  landlordDocumentNames: Record<LandlordDocumentType, string> = {
+    business_permit: '',
+    barangay_clearance: '',
+    valid_id: ''
+  };
 
   authLoading = false;
   private isHandlingOAuthCallback = false;
+  private readonly landlordDraftKey = 'register_landlord_draft';
+  private readonly landlordReviewWaitKey = 'landlord_review_wait';
 
   private lastScrollY = 0;
   private readonly scrollThreshold = 8;
   private readonly authPanelAnimationMs = 320;
   private readonly oauthCallbackParam = 'auth_callback';
   private authStateSubscription?: { unsubscribe: () => void };
+  private routeEventsSubscription?: Subscription;
 
-  menuItems = [
-    { label: 'Home', href: '#inicio', active: true },
-    { label: 'Rooms', href: '#acomodacoes', active: false },
+  menuItems: MenuItem[] = [
+    { label: 'Browse Properties', href: '/tenant-landing', active: true },
+    { label: 'Property Details', href: '/tenant-property', active: false },
     { label: 'About', href: '#sobre', active: false },
     { label: 'Contact', href: '#contato', active: false }
   ];
 
   constructor(
     private supabaseService: SupabaseService,
+    private landlordService: LandlordService,
     private router: Router,
     private loadingService: LoadingService,
     private modalService: ModalService,
@@ -128,32 +172,128 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.lastScrollY = window.scrollY || 0;
+    this.syncMenuWithCurrentRoute();
+
+    // Check current session on init
+    this.supabaseService.client.auth.getSession().then(({ data }) => {
+      this.isLoggedIn = !!data.session;
+    });
 
     // Defer async auth mutations to the next macrotask to avoid NG0100 in dev mode.
     window.setTimeout(() => {
       void this.handleOAuthReturnInPlace();
     }, 0);
 
+    const pendingReviewMessage = sessionStorage.getItem(this.landlordReviewWaitKey);
+    if (pendingReviewMessage) {
+      this.reviewWaitMessage = pendingReviewMessage;
+      this.showReviewWaitModal = true;
+    }
+
     const { data } = this.supabaseService.client.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
+        this.isLoggedIn = true;
         window.setTimeout(() => {
           void this.handleOAuthReturnInPlace();
         }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        this.isLoggedIn = false;
       }
     });
 
     this.authStateSubscription = data.subscription;
+
+    this.routeEventsSubscription = this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.syncMenuWithCurrentRoute();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.authStateSubscription?.unsubscribe();
+    this.routeEventsSubscription?.unsubscribe();
     document.body.style.overflow = '';
   }
 
   onMenuClick(index: number) {
+    if (this.menuItems[index].href.startsWith('/')) {
+      return;
+    }
+
     this.menuItems.forEach((item, i) => {
       item.active = i === index;
     });
+  }
+
+  isMenuItemActive(item: MenuItem): boolean {
+    if (item.href.startsWith('/')) {
+      const currentPath = this.router.url.split('?')[0].split('#')[0];
+      return currentPath === item.href || currentPath.startsWith(item.href + '/');
+    }
+
+    return item.active;
+  }
+
+  private syncMenuWithCurrentRoute(): void {
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+
+    this.menuItems = this.menuItems.map((item) => {
+      if (!item.href.startsWith('/')) {
+        return item;
+      }
+
+      const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
+      return { ...item, active: isActive };
+    });
+  }
+
+  async navigateToUserProfile(): Promise<void> {
+    try {
+      const profile = await this.supabaseService.getCurrentProfileStrict();
+      if (profile?.role) {
+        const role = profile.role.toLowerCase().trim();
+        switch (role) {
+          case 'admin':
+            this.router.navigate(['/admin']);
+            break;
+          case 'landlord':
+            this.router.navigate(['/landlord']);
+            break;
+          case 'tenant':
+            this.router.navigate(['/tenant-profile']);
+            break;
+          default:
+            this.router.navigate(['/landing']);
+        }
+      }
+    } catch {
+      this.modalService.error('Error', 'Unable to navigate to profile.');
+    }
+  }
+
+  async onLogout(): Promise<void> {
+    if (this.authLoading) {
+      return;
+    }
+
+    this.authLoading = true;
+
+    try {
+      const { error } = await this.supabaseService.client.auth.signOut();
+      if (error) {
+        throw error;
+      }
+
+      this.isLoggedIn = false;
+      this.closeAuthPanel();
+      this.toastService.success('Logged out successfully');
+      this.router.navigate(['/landing']);
+    } catch {
+      this.modalService.error('Logout Failed', 'Unable to log out right now. Please try again.');
+    } finally {
+      this.authLoading = false;
+    }
   }
 
   openAuthPanel(mode: 'login' | 'register' = 'login'): void {
@@ -178,6 +318,84 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
 
   showLogin(): void {
     this.authMode = 'login';
+  }
+
+  selectRole(role: 'tenant' | 'landlord'): void {
+    this.selectedRole = role;
+
+    if (role === 'landlord') {
+      this.openLandlordModal();
+      return;
+    }
+
+    this.showLandlordModal = false;
+    sessionStorage.removeItem(this.landlordDraftKey);
+  }
+
+  openLandlordModal(): void {
+    this.showLandlordModal = true;
+  }
+
+  closeLandlordModal(): void {
+    this.showLandlordModal = false;
+  }
+
+  onLandlordDocumentSelected(event: Event, type: LandlordDocumentType): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+
+    this.landlordDocumentFiles[type] = file;
+    this.landlordDocumentNames[type] = file?.name || '';
+  }
+
+  async saveLandlordVerificationDetails(): Promise<void> {
+    if (!this.landlordFullName.trim() || !this.landlordContactNumber.trim()) {
+      this.modalService.info('Missing Information', 'Please provide the landlord full name and contact number.');
+      return;
+    }
+
+    if (!this.landlordDocumentFiles.business_permit || !this.landlordDocumentFiles.barangay_clearance || !this.landlordDocumentFiles.valid_id) {
+      this.modalService.info('Missing Documents', 'Please upload the Business Permit, Barangay Clearance, and Valid ID.');
+      return;
+    }
+
+    const draft: LandlordRegistrationDraft = {
+      full_name: this.landlordFullName.trim(),
+      contact_number: this.landlordContactNumber.trim(),
+      documents: {
+        business_permit: await this.fileToDraft(this.landlordDocumentFiles['business_permit']!),
+        barangay_clearance: await this.fileToDraft(this.landlordDocumentFiles['barangay_clearance']!),
+        valid_id: await this.fileToDraft(this.landlordDocumentFiles['valid_id']!)
+      }
+    };
+
+    sessionStorage.setItem(this.landlordDraftKey, JSON.stringify(draft));
+    this.showLandlordModal = false;
+    this.showContinueRegistrationModal = true;
+    this.continueRegistrationMessage = this.selectedRole === 'landlord'
+      ? 'Your verification details are saved. Continue with your Google account to finish registration.'
+      : 'Your registration details are saved.';
+    this.toastService.success('Landlord verification details saved.');
+  }
+
+  closeContinueRegistrationModal(): void {
+    this.showContinueRegistrationModal = false;
+  }
+
+  async continueRegistration(): Promise<void> {
+    this.showContinueRegistrationModal = false;
+
+    if (this.selectedRole === 'landlord') {
+      await this.onGoogleRegister();
+      return;
+    }
+
+    await this.onRegisterSubmit();
+  }
+
+  closeReviewWaitModal(): void {
+    this.showReviewWaitModal = false;
+    sessionStorage.removeItem(this.landlordReviewWaitKey);
   }
 
   onOverlayClick(event: MouseEvent): void {
@@ -220,9 +438,19 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.toastService.success('Login successful');
+      const landingDecision = await this.resolvePostAuthNavigation(profile.id, profile.role as string);
+
+      if (String(profile.role || '').toLowerCase().trim() === 'landlord' && landingDecision.destination === '/landing') {
+        this.modalService.info(
+          'Account Not Yet Approved',
+          landingDecision.message || 'Thanks for signing up! Your landlord account is still under review. Please try logging in again once the admin approves your account.'
+        );
+      } else {
+        this.toastService.success('Login successful');
+      }
+
       this.closeAuthPanel();
-      this.navigateByRole(profile.role as string);
+      this.navigateByResolvedDecision(landingDecision);
     } catch {
       this.modalService.error('Login Failed', 'Invalid email or password.');
     } finally {
@@ -282,7 +510,18 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     this.loadingService.show('Creating your account...');
 
     try {
-      const derivedFullName = this.deriveDisplayNameFromEmail(this.registerEmail);
+      const landlordDraft = this.getLandlordRegistrationDraft();
+
+      if (this.selectedRole === 'landlord' && !landlordDraft) {
+        this.authLoading = false;
+        this.loadingService.hide();
+        this.openLandlordModal();
+        this.modalService.info('Landlord Verification Needed', 'Please complete the landlord verification form before creating the account.');
+        return;
+      }
+
+      const derivedFullName = landlordDraft?.full_name?.trim() || this.deriveDisplayNameFromEmail(this.registerEmail);
+      const contactNumber = landlordDraft?.contact_number?.trim() || null;
 
       let { data, error } = await this.supabaseService.client.auth.signUp({
         email: this.registerEmail.trim().toLowerCase(),
@@ -290,23 +529,31 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         options: {
           data: {
             full_name: derivedFullName,
-            role: this.selectedRole
+            role: this.selectedRole,
+            contact_number: contactNumber || ''
           }
         }
       });
 
-      if (error) {
-        const retry = await this.supabaseService.client.auth.signUp({
-          email: this.registerEmail.trim().toLowerCase(),
-          password: this.registerPassword
-        });
-        data = retry.data;
-        error = retry.error;
+      if (error && this.isExistingEmailRegistrationError(error)) {
+        this.modalService.info(
+          'Use Your Existing Google Account',
+          'Please use your existing Google account to continue.'
+        );
+        return;
+      }
+
+      if (error && this.isSignupRateLimitError(error)) {
+        this.modalService.info(
+          'Use Your Existing Google Account',
+          'Please use your existing Google account to continue.'
+        );
+        return;
       }
 
       // Supabase can obfuscate existing-email signups by returning a user with empty identities and no explicit error.
       if (!error && this.isExistingEmailSignupResponse(data)) {
-        this.modalService.info('Account Already Exists', 'This email is already registered. Please sign in instead.');
+        await this.continueWithGoogleForExistingAccount(this.registerEmail.trim().toLowerCase());
         return;
       }
 
@@ -314,10 +561,35 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
 
       if (data?.session && data.user?.id) {
         try {
-          await this.ensureProfileExists(data.user.id, this.selectedRole, derivedFullName);
+          await this.ensureProfileExists(data.user.id, this.selectedRole, derivedFullName, contactNumber);
+
+          if (this.selectedRole === 'landlord' && landlordDraft) {
+            await this.syncLandlordDocuments(data.user.id, landlordDraft);
+            sessionStorage.removeItem(this.landlordDraftKey);
+          }
         } catch {
           // Allow successful auth registration even if profile sync is delayed.
         }
+      }
+
+      if (this.selectedRole === 'landlord' && data?.user?.id) {
+        const landingDecision = await this.resolvePostAuthNavigation(data.user.id, 'landlord');
+        this.reviewWaitMessage = landingDecision.message || 'Your landlord application is waiting for admin review. You will receive an email when the status changes.';
+        sessionStorage.setItem(this.landlordReviewWaitKey, this.reviewWaitMessage);
+        this.showReviewWaitModal = true;
+        this.closeAuthPanel();
+        this.router.navigate(['/landing']);
+        return;
+      }
+
+      const landingDecision = data?.user?.id
+        ? await this.resolvePostAuthNavigation(data.user.id, this.selectedRole)
+        : { destination: '/landing' as const, message: this.selectedRole === 'landlord' ? 'Your application was submitted and is waiting for admin review.' : '' };
+
+      if (this.selectedRole === 'landlord') {
+        this.reviewWaitMessage = landingDecision.message || 'Your landlord application was submitted and is waiting for admin review. You will receive an email once the admin approves or rejects it.';
+        sessionStorage.setItem(this.landlordReviewWaitKey, this.reviewWaitMessage);
+        this.showReviewWaitModal = true;
       }
 
       this.toastService.success('Account created. You can now sign in.', 3500);
@@ -339,6 +611,11 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.selectedRole === 'landlord' && !this.getLandlordRegistrationDraft()) {
+      this.openLandlordModal();
+      return;
+    }
+
     this.authLoading = true;
     this.loadingService.show('Redirecting to Google...');
 
@@ -356,6 +633,40 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       if (error) throw error;
     } catch {
       this.modalService.error('Google Sign Up Failed', 'Unable to continue with Google. Please try again.');
+    } finally {
+      this.loadingService.hide();
+      this.authLoading = false;
+    }
+  }
+
+  private async continueWithGoogleForExistingAccount(emailHint: string): Promise<void> {
+    if (this.selectedRole === 'landlord' && !this.getLandlordRegistrationDraft()) {
+      this.openLandlordModal();
+      this.modalService.info('Landlord Verification Needed', 'Please complete the landlord verification form before continuing with Google.');
+      return;
+    }
+
+    sessionStorage.setItem('auth_intent', 'register');
+    sessionStorage.setItem('selected_role', this.selectedRole);
+    this.authLoading = true;
+    this.loadingService.show('Redirecting to Google...');
+
+    try {
+      const { error } = await this.supabaseService.client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: this.getCurrentPageOAuthRedirectUrl(),
+          queryParams: {
+            login_hint: emailHint
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch {
+      this.modalService.error('Google Sign Up Failed', 'Unable to continue with Google. Please try again.');
+      sessionStorage.removeItem('auth_intent');
+      this.authLoading = false;
     } finally {
       this.loadingService.hide();
       this.authLoading = false;
@@ -384,6 +695,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
   private async handleOAuthReturnInPlace(): Promise<void> {
     const authIntent = sessionStorage.getItem('auth_intent') as 'login' | 'register' | null;
     const hasCallbackParam = new URL(window.location.href).searchParams.has(this.oauthCallbackParam);
+    let postFinalizeModalMessage: string | null = null;
 
     if ((!authIntent && !hasCallbackParam) || this.isHandlingOAuthCallback) {
       return;
@@ -403,13 +715,17 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       }
 
       if (authIntent === 'register') {
+        const landlordDraft = this.getLandlordRegistrationDraft();
         const roleFromStorage = (sessionStorage.getItem('selected_role') as 'tenant' | 'landlord' | null) || 'tenant';
         const normalizedRole = roleFromStorage === 'landlord' ? 'landlord' : 'tenant';
+        const fullName = landlordDraft?.full_name?.trim() || user.user_metadata?.['full_name'] || this.deriveDisplayNameFromEmail(user.email || '');
+        const contactNumber = landlordDraft?.contact_number?.trim() || null;
 
         const { error: metadataError } = await this.supabaseService.client.auth.updateUser({
           data: {
             role: normalizedRole,
-            full_name: user.user_metadata?.['full_name'] || null
+            full_name: fullName,
+            contact_number: contactNumber || ''
           }
         });
 
@@ -420,8 +736,14 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         await this.ensureProfileExists(
           user.id,
           normalizedRole,
-          user.user_metadata?.['full_name'] || this.deriveDisplayNameFromEmail(user.email || '')
+          fullName,
+          contactNumber
         );
+
+        if (normalizedRole === 'landlord' && landlordDraft) {
+          await this.syncLandlordDocuments(user.id, landlordDraft);
+          sessionStorage.removeItem(this.landlordDraftKey);
+        }
       }
 
       const profile = await this.supabaseService.getCurrentProfileStrict();
@@ -434,9 +756,25 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.toastService.success(authIntent === 'register' ? 'Registration complete' : 'Login successful');
+      const landingDecision = await this.resolvePostAuthNavigation(user.id, profile.role as string);
+
+      if (authIntent === 'login' && String(profile.role || '').toLowerCase().trim() === 'landlord' && landingDecision.destination === '/landing') {
+        this.modalService.info(
+          'Account Not Yet Approved',
+          landingDecision.message || 'Thanks for signing up! Your landlord account is still under review. Please try logging in again once the admin approves your account.'
+        );
+      } else {
+        this.toastService.success(authIntent === 'register' ? 'Registration complete' : 'Login successful');
+      }
+
+      if (authIntent === 'register' && landingDecision.destination === '/landing' && landingDecision.message) {
+        this.reviewWaitMessage = 'You are all set. Your landlord account is now under review. Please try logging in again after admin approval.';
+        sessionStorage.setItem(this.landlordReviewWaitKey, this.reviewWaitMessage);
+        postFinalizeModalMessage = this.reviewWaitMessage;
+      }
+
       this.closeAuthPanel();
-      this.navigateByRole(profile.role as string);
+      this.navigateByResolvedDecision(landingDecision);
     } catch {
       this.modalService.error('Authentication Failed', 'Unable to complete Google sign in. Please try again.');
     } finally {
@@ -446,6 +784,12 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       this.loadingService.hide();
       this.authLoading = false;
       this.isHandlingOAuthCallback = false;
+
+      if (postFinalizeModalMessage) {
+        setTimeout(() => {
+          this.modalService.info('Verification In Progress', postFinalizeModalMessage as string);
+        }, 150);
+      }
     }
   }
 
@@ -459,7 +803,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
         this.router.navigate(['/landlord']);
         break;
       case 'tenant':
-        this.router.navigate(['/tenant']);
+        this.router.navigate(['/tenant-landing']);
         break;
       default:
         this.router.navigate(['/landing']);
@@ -467,10 +811,69 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     }
   }
 
+  private navigateByResolvedDecision(decision: { destination: '/landing' | '/admin' | '/tenant-landing' | '/landlord'; message?: string }): void {
+    if (decision.destination === '/landing') {
+      this.router.navigate(['/landing']);
+      return;
+    }
+
+    this.router.navigate([decision.destination]);
+  }
+
+  private async resolvePostAuthNavigation(
+    userId: string,
+    role: string
+  ): Promise<{ destination: '/landing' | '/admin' | '/tenant-landing' | '/landlord'; message?: string }> {
+    const normalizedRole = role.toLowerCase().trim();
+
+    if (normalizedRole !== 'landlord') {
+      return { destination: normalizedRole === 'admin' ? '/admin' : '/tenant-landing' };
+    }
+
+    const summary = await this.landlordService.getLandlordVerificationSummary(userId);
+    if (!summary || summary.status === 'pending' || summary.status === 'resubmission_required') {
+      return {
+        destination: '/landing',
+        message: 'Thanks for signing up! Your landlord account is still under review. Please try logging in again once the admin approves your account.'
+      };
+    }
+
+    if (summary.status === 'rejected') {
+      return {
+        destination: '/landing',
+        message: 'Your landlord verification was rejected. Please check your email for the admin remarks and next steps.'
+      };
+    }
+
+    return { destination: '/landlord' };
+  }
+
+  private isSignupRateLimitError(error: any): boolean {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+
+    return code === 'over_email_send_rate_limit' || message.includes('rate limit') || message.includes('too many signup attempts');
+  }
+
+  private isExistingEmailRegistrationError(error: any): boolean {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+
+    return (
+      code === 'user_already_exists' ||
+      code === 'email_exists' ||
+      message.includes('already registered') ||
+      message.includes('already exists') ||
+      message.includes('user already exists') ||
+      message.includes('email exists')
+    );
+  }
+
   private async ensureProfileExists(
     userId: string,
     role: 'tenant' | 'landlord',
-    fullName: string
+    fullName: string,
+    contactNumber: string | null = null
   ): Promise<void> {
     const { data: existingProfile, error: selectError } = await this.supabaseService.client
       .from('profiles')
@@ -485,7 +888,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     if (existingProfile) {
       const { error: updateError } = await this.supabaseService.client
         .from('profiles')
-        .update({ role, full_name: fullName || null })
+        .update({ role, full_name: fullName || null, contact_number: contactNumber })
         .eq('id', userId);
 
       if (updateError) {
@@ -500,7 +903,8 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       .insert({
         id: userId,
         role,
-        full_name: fullName || null
+        full_name: fullName || null,
+        contact_number: contactNumber
       });
 
     if (insertError) {
@@ -513,18 +917,99 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     const details = typeof error?.message === 'string' ? error.message : '';
 
     if (code === 'email_address_invalid') {
-      return 'Please enter a valid email format, like yourname@gmail.com. Test domains like example.com are rejected.';
+      return 'Please enter a valid email address. Test accounts are allowed as long as the format is valid.';
     }
 
     if (code === 'over_email_send_rate_limit') {
-      return 'Too many signup attempts in a short time. Please wait a few minutes, then try again.';
+      return 'Please use your existing Google account to continue.';
     }
 
     if (code === 'user_already_exists' || code === 'email_exists') {
-      return 'This email is already registered. Please sign in instead.';
+      return 'Please use your existing Google account to continue.';
     }
 
     return details || 'Failed to create account. Please try again.';
+  }
+
+  private getLandlordRegistrationDraft(): LandlordRegistrationDraft | null {
+    const rawDraft = sessionStorage.getItem(this.landlordDraftKey);
+
+    if (!rawDraft) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawDraft) as LandlordRegistrationDraft;
+    } catch {
+      return null;
+    }
+  }
+
+  private async syncLandlordDocuments(userId: string, draft: LandlordRegistrationDraft): Promise<void> {
+    const documents = [
+      { type: 'business_permit' as const, file: draft.documents['business_permit'] },
+      { type: 'barangay_clearance' as const, file: draft.documents['barangay_clearance'] },
+      { type: 'valid_id' as const, file: draft.documents['valid_id'] }
+    ];
+
+    await Promise.all(
+      documents.map(async (document) => {
+        const storagePath = `${userId}/${document.type}/${Date.now()}-${document.file.fileName}`;
+        const fileBlob = await this.dataUrlToBlob(document.file.dataUrl);
+
+        const { error: uploadError } = await this.supabaseService.client.storage
+          .from('landlord-documents')
+          .upload(storagePath, fileBlob, {
+            contentType: document.file.mimeType,
+            upsert: true
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { error: insertError } = await this.supabaseService.client
+          .from('documents')
+          .upsert(
+            {
+              landlord_id: userId,
+              type: document.type,
+              file_url: storagePath,
+              uploaded_at: new Date().toISOString()
+            },
+            {
+              onConflict: 'landlord_id,type'
+            }
+          );
+
+        if (insertError) {
+          throw insertError;
+        }
+      })
+    );
+  }
+
+  private async fileToDraft(file: File): Promise<LandlordDocumentDraft> {
+    return {
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      dataUrl: await this.readFileAsDataUrl(file)
+    };
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Unable to read uploaded document.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private async dataUrlToBlob(dataUrl: string): Promise<Blob> {
+    const response = await fetch(dataUrl);
+    return response.blob();
   }
 
   private isExistingEmailSignupResponse(data: any): boolean {

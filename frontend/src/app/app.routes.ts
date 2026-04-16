@@ -14,6 +14,27 @@ export const routes: Routes = [
       .then(m => m.LandingComponent)
   },
   {
+    path: 'tenant-landing',
+    loadComponent: () => import('./features/tenant/tenant-landingpage/tenant-landingpage')
+      .then(m => m.TenantLandingpageComponent)
+  },
+  {
+    path: 'tenant-property',
+    loadComponent: () => import('./features/tenant/tenant-property-details/tenant-property-details')
+      .then(m => m.TenantPropertyDetailsComponent)
+  },
+  {
+    path: 'tenant-property/:id',
+    loadComponent: () => import('./features/tenant/tenant-property-details/tenant-property-details')
+      .then(m => m.TenantPropertyDetailsComponent)
+  },
+  {
+    path: 'tenant-profile',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/tenant/tenant-profile/tenant-profile')
+      .then(m => m.TenantProfileComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login')
       .then(m => m.LoginComponent)
@@ -35,6 +56,30 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./features/admin/dashboard/admin-dashboard')
           .then(m => m.AdminDashboard)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./features/admin/manage-users/landlord-list/landlord-list')
+          .then(m => m.LandlordListComponent)
+      },
+      {
+        path: 'users/:id',
+        loadComponent: () => import('./features/admin/manage-users/landlord-detail/landlord-detail')
+          .then(m => m.LandlordDetailComponent)
+      },
+      {
+        path: 'properties',
+        loadComponent: () => import('./features/admin/check-properties/check-properties')
+          .then(m => m.CheckPropertiesComponent)
+      },
+      {
+        path: 'landlords/pending',
+        redirectTo: 'users',
+        pathMatch: 'full'
+      },
+      {
+        path: 'landlords/:id',
+        redirectTo: 'users/:id'
       }
     ]
   },

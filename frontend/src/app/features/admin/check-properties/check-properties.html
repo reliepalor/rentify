@@ -1,0 +1,407 @@
+<section class="space-y-6">
+  <header class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900">Check Properties</h2>
+      <p class="text-sm text-gray-600">Review landlord-submitted properties and units before publishing.</p>
+    </div>
+  </header>
+
+  <div class="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+    <button
+      type="button"
+      (click)="setActiveTab('properties')"
+      class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+      [class.bg-emerald-600]="activeTab() === 'properties'"
+      [class.text-white]="activeTab() === 'properties'"
+      [class.text-gray-700]="activeTab() !== 'properties'"
+    >
+      Properties ({{ propertyRecords().length }})
+    </button>
+    <button
+      type="button"
+      (click)="setActiveTab('units')"
+      class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+      [class.bg-emerald-600]="activeTab() === 'units'"
+      [class.text-white]="activeTab() === 'units'"
+      [class.text-gray-700]="activeTab() !== 'units'"
+    >
+      Units ({{ unitRecords().length }})
+    </button>
+  </div>
+
+  <div *ngIf="loading()" class="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+    Loading review records...
+  </div>
+
+  <div *ngIf="!loading() && activeTab() === 'properties'" class="space-y-3">
+    <div class="grid gap-3 lg:grid-cols-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Search</label>
+        <input
+          type="text"
+          [value]="propertySearchQuery()"
+          (input)="setPropertySearchQuery($any($event.target).value)"
+          placeholder="Search by name or landlord..."
+          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Location</label>
+        <select
+          [value]="selectedPropertyLocation()"
+          (change)="setPropertyLocation($any($event.target).value)"
+          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        >
+          <option value="">All Locations</option>
+          <option *ngFor="let location of uniquePropertyLocations()" [value]="location">
+            {{ location }}
+          </option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button
+          type="button"
+          (click)="clearPropertyFilters()"
+          class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <div class="inline-flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
+      <button
+        type="button"
+        (click)="setPropertyStatusFilter('all')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-slate-800]="selectedPropertyStatus() === 'all'"
+        [class.text-white]="selectedPropertyStatus() === 'all'"
+        [class.text-gray-700]="selectedPropertyStatus() !== 'all'"
+      >
+        All
+      </button>
+      <button
+        type="button"
+        (click)="setPropertyStatusFilter('pending')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-amber-500]="selectedPropertyStatus() === 'pending'"
+        [class.text-white]="selectedPropertyStatus() === 'pending'"
+        [class.text-gray-700]="selectedPropertyStatus() !== 'pending'"
+      >
+        Pending
+      </button>
+      <button
+        type="button"
+        (click)="setPropertyStatusFilter('approved')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-emerald-600]="selectedPropertyStatus() === 'approved'"
+        [class.text-white]="selectedPropertyStatus() === 'approved'"
+        [class.text-gray-700]="selectedPropertyStatus() !== 'approved'"
+      >
+        Approved
+      </button>
+      <button
+        type="button"
+        (click)="setPropertyStatusFilter('rejected')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-rose-600]="selectedPropertyStatus() === 'rejected'"
+        [class.text-white]="selectedPropertyStatus() === 'rejected'"
+        [class.text-gray-700]="selectedPropertyStatus() !== 'rejected'"
+      >
+        Rejected
+      </button>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <th class="px-4 py-3">Property</th>
+          <th class="px-4 py-3">Landlord</th>
+          <th class="px-4 py-3">Location</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3">Submitted</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+        <tr *ngFor="let property of filteredProperties()">
+          <td class="px-4 py-3 font-medium text-gray-900">{{ property.name }}</td>
+          <td class="px-4 py-3">
+            <p>{{ property.landlord?.full_name || 'Unknown' }}</p>
+            <p class="text-xs text-gray-500">{{ property.landlord?.contact_number || 'No contact' }}</p>
+          </td>
+          <td class="px-4 py-3">{{ formatPropertyLocation(property) || 'N/A' }}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium" [ngClass]="getApprovalStatusClass(property.approval_status)">
+              {{ formatApprovalStatus(property.approval_status) }}
+            </span>
+          </td>
+          <td class="px-4 py-3">{{ formatDate(property.created_at) }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="inline-flex gap-2">
+              <button
+                type="button"
+                (click)="openPropertyDetails(property.id)"
+                class="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                View Details
+              </button>
+              <button
+                *ngIf="canReview(property.approval_status)"
+                type="button"
+                (click)="approveProperty(property.id)"
+                class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+              >
+                Approve
+              </button>
+              <button
+                *ngIf="canReview(property.approval_status)"
+                type="button"
+                (click)="rejectProperty(property.id)"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Reject
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredProperties().length === 0">
+          <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">No property records for this status.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div *ngIf="!loading() && activeTab() === 'units'" class="space-y-3">
+    <div class="grid gap-3 lg:grid-cols-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Search</label>
+        <input
+          type="text"
+          [value]="unitSearchQuery()"
+          (input)="setUnitSearchQuery($any($event.target).value)"
+          placeholder="Search by room, property, or landlord..."
+          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Location</label>
+        <select
+          [value]="selectedUnitLocation()"
+          (change)="setUnitLocation($any($event.target).value)"
+          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        >
+          <option value="">All Locations</option>
+          <option *ngFor="let location of uniqueUnitLocations()" [value]="location">
+            {{ location }}
+          </option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button
+          type="button"
+          (click)="clearUnitFilters()"
+          class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <div class="inline-flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
+      <button
+        type="button"
+        (click)="setUnitStatusFilter('all')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-slate-800]="selectedUnitStatus() === 'all'"
+        [class.text-white]="selectedUnitStatus() === 'all'"
+        [class.text-gray-700]="selectedUnitStatus() !== 'all'"
+      >
+        All
+      </button>
+      <button
+        type="button"
+        (click)="setUnitStatusFilter('pending')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-amber-500]="selectedUnitStatus() === 'pending'"
+        [class.text-white]="selectedUnitStatus() === 'pending'"
+        [class.text-gray-700]="selectedUnitStatus() !== 'pending'"
+      >
+        Pending
+      </button>
+      <button
+        type="button"
+        (click)="setUnitStatusFilter('approved')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-emerald-600]="selectedUnitStatus() === 'approved'"
+        [class.text-white]="selectedUnitStatus() === 'approved'"
+        [class.text-gray-700]="selectedUnitStatus() !== 'approved'"
+      >
+        Approved
+      </button>
+      <button
+        type="button"
+        (click)="setUnitStatusFilter('rejected')"
+        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-rose-600]="selectedUnitStatus() === 'rejected'"
+        [class.text-white]="selectedUnitStatus() === 'rejected'"
+        [class.text-gray-700]="selectedUnitStatus() !== 'rejected'"
+      >
+        Rejected
+      </button>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <th class="px-4 py-3">Unit</th>
+          <th class="px-4 py-3">Property</th>
+          <th class="px-4 py-3">Landlord</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3">Submitted</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+        <tr *ngFor="let unit of filteredUnits()">
+          <td class="px-4 py-3">
+            <p class="font-medium text-gray-900">Room {{ unit.room_number }}</p>
+            <p class="text-xs text-gray-500">{{ unit.type | titlecase }} • ₱{{ unit.monthly_rent }}</p>
+          </td>
+          <td class="px-4 py-3">{{ unit.property?.name || 'Unknown property' }}</td>
+          <td class="px-4 py-3">
+            <p>{{ unit.property?.landlord?.full_name || 'Unknown' }}</p>
+            <p class="text-xs text-gray-500">{{ unit.property?.landlord?.contact_number || 'No contact' }}</p>
+          </td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium" [ngClass]="getApprovalStatusClass(unit.approval_status)">
+              {{ formatApprovalStatus(unit.approval_status) }}
+            </span>
+          </td>
+          <td class="px-4 py-3">{{ formatDate(unit.created_at) }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="inline-flex gap-2">
+              <button
+                *ngIf="canReview(unit.approval_status)"
+                type="button"
+                (click)="approveUnit(unit.id)"
+                class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+              >
+                Approve
+              </button>
+              <button
+                *ngIf="canReview(unit.approval_status)"
+                type="button"
+                (click)="rejectUnit(unit.id)"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Reject
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredUnits().length === 0">
+          <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">No unit records for this status.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div *ngIf="showPropertyDetailModal()" class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+    <button
+      type="button"
+      aria-label="Close property details"
+      class="absolute inset-0 bg-slate-950/45 backdrop-blur-[4px]"
+      (click)="closePropertyDetails()"
+    ></button>
+
+    <div class="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl">
+      <div class="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Property Draft</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900">{{ selectedPropertyDetail()?.name || 'Property details' }}</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closePropertyDetails()"
+          class="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+        >
+          Close
+        </button>
+      </div>
+
+      <div *ngIf="detailLoading()" class="p-8 text-sm text-gray-500">Loading property details...</div>
+
+      <div *ngIf="!detailLoading() && selectedPropertyDetail() as draft" class="grid gap-6 p-6 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
+          <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+            <img *ngIf="draft.image_url; else noDraftImage" [src]="draft.image_url" [alt]="draft.name" class="h-64 w-full object-cover" />
+            <ng-template #noDraftImage>
+              <div class="flex h-64 items-center justify-center text-sm text-gray-500">No property image uploaded</div>
+            </ng-template>
+          </div>
+
+          <div class="rounded-2xl border border-gray-200 bg-white p-4">
+            <h4 class="text-sm font-semibold text-gray-900">Description</h4>
+            <p class="mt-2 text-sm text-gray-600">{{ draft.description || 'No description provided.' }}</p>
+          </div>
+
+          <div class="rounded-2xl border border-gray-200 bg-white p-4">
+            <h4 class="text-sm font-semibold text-gray-900">Amenities</h4>
+            <div class="mt-2 flex flex-wrap gap-2" *ngIf="formatAmenities(draft.amenities).length > 0; else noAmenities">
+              <span *ngFor="let amenity of formatAmenities(draft.amenities)" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                {{ amenity }}
+              </span>
+            </div>
+            <ng-template #noAmenities>
+              <p class="mt-2 text-sm text-gray-500">No amenities listed.</p>
+            </ng-template>
+          </div>
+
+          <div class="rounded-2xl border border-gray-200 bg-white p-4">
+            <h4 class="text-sm font-semibold text-gray-900">House Rules</h4>
+            <p class="mt-2 whitespace-pre-wrap text-sm text-gray-600">{{ draft.house_rules || 'No house rules provided.' }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+            <p><span class="font-semibold text-gray-900">Landlord:</span> {{ draft.landlord?.full_name || 'Unknown' }}</p>
+            <p class="mt-2"><span class="font-semibold text-gray-900">Contact:</span> {{ draft.landlord?.contact_number || 'No contact' }}</p>
+            <p class="mt-2"><span class="font-semibold text-gray-900">Submitted:</span> {{ formatDate(draft.created_at) }}</p>
+            <p class="mt-2"><span class="font-semibold text-gray-900">Location:</span> {{ formatPropertyLocation(draft) || 'N/A' }}</p>
+            <p class="mt-2"><span class="font-semibold text-gray-900">Address:</span> {{ draft.address || 'N/A' }}</p>
+            <div class="mt-3">
+              <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium" [ngClass]="getApprovalStatusClass(draft.approval_status)">
+                {{ formatApprovalStatus(draft.approval_status) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-gray-200 bg-white p-4">
+            <h4 class="text-sm font-semibold text-gray-900">Unit Drafts</h4>
+            <div class="mt-3 space-y-3" *ngIf="draft.units.length > 0; else noUnitDrafts">
+              <div *ngFor="let unit of draft.units" class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
+                <p class="font-semibold text-gray-900">Room {{ unit.room_number }} • {{ unit.type | titlecase }}</p>
+                <p class="mt-1 text-gray-600">₱{{ unit.monthly_rent }} • Capacity {{ unit.capacity }}</p>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium" [ngClass]="getApprovalStatusClass(unit.approval_status)">
+                    {{ formatApprovalStatus(unit.approval_status) }}
+                  </span>
+                </div>
+                <p *ngIf="unit.approval_remarks" class="mt-2 text-xs text-rose-700">Remarks: {{ unit.approval_remarks }}</p>
+              </div>
+            </div>
+            <ng-template #noUnitDrafts>
+              <p class="mt-3 text-sm text-gray-500">No unit drafts linked to this property yet.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

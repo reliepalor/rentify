@@ -1,150 +1,226 @@
+<app-header></app-header>
 
-<main *ngIf="!isEditMode" class="flex-1 px-6 md:px-12 py-10 max-w-5xl mx-auto w-full">
-    <div class="mb-8">
-<!-- <h1 class="text-4xl font-extrabold text-on-background tracking-tight mb-2">Edit Profile</h1> -->
-<nav class="text-sm mb-4">
-  <ol class="flex items-center gap-2 text-gray-500">
-
-    <li>
+<section class="pt-28 pb-20 bg-gradient-to-b from-stone-100 via-white to-stone-50 min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 md:px-10">
+    <div class="mb-8 flex items-center justify-between">
+      <h1 class="text-3xl md:text-4xl font-semibold text-stone-900 tracking-[-0.02em]">Tenant Profile</h1>
       <a
-        routerLink="/tenant"
-        class="hover:text-blue-600 transition-colors"
+        routerLink="/tenant-landing"
+        class="inline-flex items-center gap-2 rounded-lg bg-white border border-stone-200 px-4 py-2 text-stone-700 hover:bg-stone-50 transition-colors"
       >
-        Home
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Listings
       </a>
-    </li>
+    </div>
 
-    <li class="text-gray-400">/</li>
+    <div *ngIf="loading()" class="text-center py-16">
+      <div class="inline-block">
+        <div class="w-12 h-12 border-4 border-stone-300 border-t-emerald-600 rounded-full animate-spin"></div>
+      </div>
+      <p class="text-stone-600 mt-4">Loading your profile...</p>
+    </div>
 
-    <li class="text-gray-700 font-medium">
-      Account
-    </li>
+    <div *ngIf="!loading()" class="space-y-8">
+      <article class="rounded-3xl border border-stone-200 bg-white shadow-sm p-8 md:p-10">
+        <div class="flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+          <div class="h-20 w-20 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl font-semibold shadow-lg shadow-emerald-900/25">
+            {{ getTenantInitials() }}
+          </div>
 
-  </ol>
-</nav>
+          <div class="flex-1">
+            <h2 class="text-2xl font-semibold text-stone-900">
+              {{ profile()?.full_name || 'Tenant Account' }}
+            </h2>
+            <p class="text-stone-600 mt-1">Role: {{ profile()?.role | titlecase }}</p>
+            <p class="text-stone-600 mt-1">Contact: {{ profile()?.contact_number || 'No contact number provided' }}</p>
+            <p class="text-stone-600 mt-1">Address: {{ profile()?.address || 'No address provided' }}</p>
+          </div>
 
-<!-- <p class="text-on-surface-variant font-label text-sm uppercase tracking-widest font-semibold">
-  Account Management
-</p> -->
-</div>
-<!-- Bento Layout Content -->
-<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-<!-- Profile Picture Section -->
-<section class="md:col-span-4 space-y-6">
-<div class="bg-surface-container-low rounded-lg p-8 flex flex-col items-center text-center">
-<div class="relative group cursor-pointer">
-<div class="w-40 h-40 rounded-full overflow-hidden border-4 border-surface-container-lowest shadow-sm mb-4">
-<img alt="Alex Sterling Profile" class="w-full h-full object-cover" data-alt="High-resolution portrait of a man in natural sunlight, emphasizing clear skin and professional demeanor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE1ceWDX4ySy3uWx_HnygEsYCvuRnUWPhyW7v-cfcH439gXtwek1IBURQK5_ljNWfCQuTGU-43PPUkHrTeuCvj76DybllLSGZqKXQrM41Xci6IrrNsDain7kM-6DjMQ6J9zA_48805a36oOrZ-gRcryPqaLCZjnW74EnX2oTMZZb9oO_5iZCqPwa5Y3hYdZaHvTPL6mdXu-7IBbUF6OCe-7usuA3q_XznwMozjBnWM1lnykyi1xUdyhlFRk2lSxZMhvMUOXqi0qDjb"/>
-</div>
-<div class="absolute inset-0 bg-primary/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
-</div>
-</div>
-<h3 class="font-bold text-lg text-on-surface">
-  {{ profile?.full_name }}
-</h3>
-<p class="text-on-surface-variant text-sm mb-6">PNG, JPG up to 10MB</p>
-<button class="text-primary font-bold text-sm px-6 py-2 rounded-full border border-outline-variant/40 hover:bg-primary/5 transition-colors">
-              Upload New
-            </button>
-</div>
-<div class="bg-surface-container-low rounded-lg p-6 space-y-4">
-<div class="flex justify-between items-center">
-<span class="text-on-surface-variant text-xs font-label font-semibold">Created</span>
-<span class="text-on-surface text-xs font-medium">
-  {{ profile?.created_at | date:'mediumDate' }}
-</span></div>
-<div class="flex justify-between items-center">
-<span class="text-on-surface-variant text-xs font-label font-semibold">Last Edited</span>
-<span class="text-on-surface text-xs font-medium">
-  {{ profile?.updated_at | date:'mediumDate' }}
-</span>
-</div>
-</div>
+          <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
+            <div class="rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 text-center min-w-[110px]">
+              <p class="text-xs uppercase tracking-wide text-stone-500 font-semibold">Applied</p>
+              <p class="text-xl font-bold text-stone-900 mt-1">{{ applications().length }}</p>
+            </div>
+            <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-center min-w-[110px]">
+              <p class="text-xs uppercase tracking-wide text-amber-700 font-semibold">Pending</p>
+              <p class="text-xl font-bold text-amber-800 mt-1">{{ getPendingCount() }}</p>
+            </div>
+            <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center min-w-[110px]">
+              <p class="text-xs uppercase tracking-wide text-emerald-700 font-semibold">Approved</p>
+              <p class="text-xl font-bold text-emerald-800 mt-1">{{ getApprovedCount() }}</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="rounded-3xl border border-stone-200 bg-white shadow-sm p-8 md:p-10">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div>
+            <h3 class="text-2xl font-semibold text-stone-900">Applied Properties & Units</h3>
+            <p class="text-stone-600 mt-1">Track your applications and property details in one place.</p>
+          </div>
+          <div class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-700 font-semibold">
+            {{ getDistinctPropertyCount() }} Properties
+          </div>
+        </div>
+
+        <div *ngIf="applications().length > 0" class="mb-6 rounded-2xl border border-stone-200 bg-stone-50 p-4 md:p-5">
+          <div class="grid md:grid-cols-[1fr_auto] gap-4 items-center">
+            <div>
+              <input
+                type="text"
+                [value]="searchQuery()"
+                (input)="searchQuery.set($any($event.target).value)"
+                placeholder="Search by property, room, or location..."
+                class="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/35 focus:border-emerald-500"
+              />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="setStatusFilter('all')"
+                [ngClass]="statusFilter() === 'all' ? 'bg-stone-900 text-white' : 'bg-white text-stone-700 border border-stone-300'"
+                class="px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                (click)="setStatusFilter('pending')"
+                [ngClass]="statusFilter() === 'pending' ? 'bg-amber-500 text-white' : 'bg-white text-stone-700 border border-stone-300'"
+                class="px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                (click)="setStatusFilter('approved')"
+                [ngClass]="statusFilter() === 'approved' ? 'bg-emerald-600 text-white' : 'bg-white text-stone-700 border border-stone-300'"
+                class="px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+              >
+                Approved
+              </button>
+              <button
+                type="button"
+                (click)="setStatusFilter('rejected')"
+                [ngClass]="statusFilter() === 'rejected' ? 'bg-rose-600 text-white' : 'bg-white text-stone-700 border border-stone-300'"
+                class="px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+              >
+                Rejected
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="applications().length === 0" class="rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+          <h4 class="text-xl font-semibold text-stone-900 mb-2">No Applications Yet</h4>
+          <p class="text-stone-600 mb-5">Start exploring verified listings and apply for your preferred unit.</p>
+          <a
+            routerLink="/tenant-landing"
+            class="inline-flex items-center px-5 py-3 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
+          >
+            Browse Properties
+          </a>
+        </div>
+
+        <div *ngIf="applications().length > 0 && filteredApplications().length === 0" class="rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+          <h4 class="text-xl font-semibold text-stone-900 mb-2">No Matching Applications</h4>
+          <p class="text-stone-600 mb-5">Try a different keyword or status filter.</p>
+          <button
+            type="button"
+            (click)="searchQuery.set(''); setStatusFilter('all')"
+            class="inline-flex items-center px-5 py-3 rounded-lg bg-stone-900 text-white font-semibold hover:bg-stone-800 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <div *ngIf="filteredApplications().length > 0" class="space-y-4">
+          <article
+            *ngFor="let application of filteredApplications()"
+            class="rounded-2xl border border-stone-200 overflow-hidden"
+          >
+            <div class="grid md:grid-cols-[240px_1fr] gap-0">
+              <div class="h-52 md:h-full bg-stone-200">
+                <img
+                  *ngIf="application.unit?.property?.image_url"
+                  [src]="application.unit?.property?.image_url"
+                  [alt]="application.unit?.property?.name || 'Property image'"
+                  class="w-full h-full object-cover"
+                />
+                <div *ngIf="!application.unit?.property?.image_url" class="w-full h-full flex items-center justify-center">
+                  <svg class="w-12 h-12 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6 md:p-7">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                  <div>
+                    <h4 class="text-xl font-semibold text-stone-900">{{ application.unit?.property?.name || 'Property' }}</h4>
+                    <p class="text-sm text-stone-600 mt-1">{{ getPropertyLocation(application) }}</p>
+                  </div>
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                    [ngClass]="getStatusClasses(application.status)"
+                  >
+                    {{ application.status | titlecase }}
+                  </span>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                  <div class="rounded-xl bg-stone-50 border border-stone-200 px-3 py-2">
+                    <p class="text-stone-500 text-xs uppercase tracking-wide">Unit</p>
+                    <p class="text-stone-900 font-semibold mt-1">Room {{ application.unit?.room_number || '-' }}</p>
+                  </div>
+                  <div class="rounded-xl bg-stone-50 border border-stone-200 px-3 py-2">
+                    <p class="text-stone-500 text-xs uppercase tracking-wide">Type</p>
+                    <p class="text-stone-900 font-semibold mt-1">{{ application.unit?.type | titlecase }}</p>
+                  </div>
+                  <div class="rounded-xl bg-stone-50 border border-stone-200 px-3 py-2">
+                    <p class="text-stone-500 text-xs uppercase tracking-wide">Capacity</p>
+                    <p class="text-stone-900 font-semibold mt-1">{{ application.unit?.capacity || 0 }} tenant(s)</p>
+                  </div>
+                  <div class="rounded-xl bg-stone-50 border border-stone-200 px-3 py-2">
+                    <p class="text-stone-500 text-xs uppercase tracking-wide">Rent</p>
+                    <p class="text-emerald-700 font-semibold mt-1">₱{{ application.unit?.monthly_rent || 0 | number }}</p>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-sm text-stone-600">
+                  <p><span class="font-semibold text-stone-800">Applied:</span> {{ application.application_date | date:'mediumDate' }}</p>
+                  <p class="mt-1"><span class="font-semibold text-stone-800">Lease Duration:</span> {{ getRentalDuration(application) }}</p>
+                  <p class="mt-1">
+                    <span class="font-semibold text-stone-800">Lease End Date:</span>
+                    {{ getRentalEndDate(application) ? (getRentalEndDate(application) | date:'mediumDate') : 'Not set by landlord' }}
+                  </p>
+                  <p class="mt-1"><span class="font-semibold text-stone-800">Property Address:</span> {{ application.unit?.property?.address || 'No address provided' }}</p>
+                  <p *ngIf="application.message" class="mt-1"><span class="font-semibold text-stone-800">Message:</span> {{ application.message }}</p>
+                </div>
+
+                <div class="mt-5">
+                  <a
+                    *ngIf="application.unit?.property?.id"
+                    [routerLink]="['/tenant-property', application.unit?.property?.id]"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 transition-colors"
+                  >
+                    View Property
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </div>
 </section>
-<!-- Form Section -->
-<section class="md:col-span-8 bg-surface-container-lowest rounded-lg p-8 md:p-12 shadow-[0_32px_64px_rgba(23,29,26,0.02)]">
-<form class="space-y-8">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-<!-- Full Name -->
-<div class="space-y-2">
-<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Full Name</label>
-<input
-  type="text"
-  [value]="profile?.full_name"
-  class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-full px-6 py-4 text-on-surface font-medium"
-/></div>
-<!-- Contact Number -->
-<div class="space-y-2">
-<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Contact Number</label>
-<input
-  type="tel"
-  [value]="profile?.contact_number"
-  class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-full px-6 py-4 text-on-surface font-medium"
-/></div>
-</div>
-<!-- Email (Read Only Styled) -->
-<div class="space-y-2 opacity-70">
-<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email Address </label>
-<div class="w-full bg-surface-container-low rounded-full px-6 py-4 text-on-surface font-medium flex items-center justify-between">
-<span>{{ email }}</span>
-<span class="material-symbols-outlined text-sm">lock</span>
-</div>
-</div>
-<!-- Address -->
-<div class="space-y-2">
-<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Address</label>
-<textarea
-  rows="3"
-  class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-lg px-6 py-4 text-on-surface font-medium"
->
-{{ profile?.address }}
-</textarea></div>
-<!-- Preference Toggle (Extra Polish) -->
-<!-- <div class="pt-4 border-t border-outline-variant/10">
-<div class="flex items-center justify-between p-4 bg-secondary-container/20 rounded-lg">
 
-<div class="flex items-center space-x-3">
-<span class="material-symbols-outlined text-primary">verified_user</span>
-<div>
-<p class="text-sm font-bold text-primary">Two-Factor Authentication</p>
-<p class="text-xs text-on-secondary-container">Keep your account secure</p>
-</div>
-</div>
-<div class="w-12 h-6 bg-primary rounded-full relative">
-<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-</div>
-</div>
-</div> -->
-<!-- Action Buttons -->
-<div class="flex items-center justify-end space-x-4 pt-6">
-<!-- <button class="px-8 py-4 text-on-surface-variant font-bold text-sm hover:text-primary transition-colors" type="button">
-                Discard
-              </button> -->
-<button
-  class="flex items-center gap-2 px-10 py-4 bg-gradient-to-br from-teal-400 to-teal-700 text-white rounded-full font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
-  type="button"
-  (click)="openEdit()"
->
-  <svg xmlns="http://www.w3.org/2000/svg"
-       viewBox="0 0 24 24"
-       fill="currentColor"
-       class="w-5 h-5">
-    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm14.71-9.04c.39-.39.39-1.02 
-    0-1.41l-2.5-2.5a.9959.9959 0 00-1.41 0l-1.83 
-    1.83 3.75 3.75 1.99-1.67z"/>
-  </svg>
-
-  Edit Profile
-</button>
-</div>
-</form>
-</section>
-</div>
-</main>
-
-
-<app-tenant-profile-modal
-  *ngIf="isEditMode"
-  (close)="closeEdit()">
-</app-tenant-profile-modal>
+<app-tenant-footer></app-tenant-footer>

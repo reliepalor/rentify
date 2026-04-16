@@ -23,6 +23,7 @@ export class LandlordPropertiesComponent implements OnInit {
   showEditPropertyModal = signal(false);
   showAddUnitModal = signal(false);
   showArchivePropertyModal = signal(false);
+  addingProperty = signal(false);
 
   selectedPropertyId = signal<string | null>(null);
   selectedArchivePropertyId = signal<string | null>(null);
@@ -41,6 +42,18 @@ export class LandlordPropertiesComponent implements OnInit {
       return name.includes(query) || location.includes(query);
     });
   });
+  rejectedProperties = computed(() => this.properties().filter((property) => property.approval_status === 'rejected'));
+  rejectedUnits = computed(() =>
+    this.properties().flatMap((property) =>
+      (property.units || [])
+        .filter((unit) => unit.approval_status === 'rejected')
+        .map((unit) => ({
+          ...unit,
+          propertyId: property.id,
+          propertyName: property.name
+        }))
+    )
+  );
 
   // Forms
   newProperty: NewPropertyForm = this.createEmptyPropertyForm();
@@ -136,6 +149,17 @@ export class LandlordPropertiesComponent implements OnInit {
     this.showEditPropertyModal.set(true);
   }
 
+  openResubmitProperty(propertyId: string): void {
+    const property = this.properties().find((item) => item.id === propertyId);
+    if (!property) return;
+
+    this.openEditPropertyModal(property);
+  }
+
+  openResubmitUnit(propertyId: string): void {
+    this.openAddUnitModal(propertyId);
+  }
+
   closeAddPropertyModal() {
     this.showAddPropertyModal.set(false);
   }
@@ -165,10 +189,16 @@ export class LandlordPropertiesComponent implements OnInit {
   }
 
   async addProperty() {
+    if (this.addingProperty()) {
+      return;
+    }
+
     if (!this.newProperty.name?.trim() || !this.newProperty.barangay?.trim() || !this.newProperty.municipality?.trim() || !this.newProperty.province?.trim()) {
       this.modalService.info('Missing Information', 'Property name, barangay, municipality, and province are required.');
       return;
     }
+
+    this.addingProperty.set(true);
 
     try {
       const user = await this.supabaseService.getCurrentUser();
@@ -191,18 +221,24 @@ export class LandlordPropertiesComponent implements OnInit {
           image_url: imageUrl,
           amenities: this.parseAmenities(this.newProperty.amenities),
           house_rules: this.newProperty.house_rules?.trim() || null,
-          status: this.newProperty.status,
+          status: 'inactive',
+          approval_status: 'pending',
+          approval_remarks: null,
+          approved_at: null,
+          approved_by: null,
           is_active: true
         });
 
       if (error) throw error;
 
-      this.toastService.success('Property added successfully!');
+      this.toastService.success('Property submitted for admin review.');
       this.closeAddPropertyModal();
       await this.loadProperties();
     } catch (error) {
       console.error(error);
       this.modalService.error('Add Property Failed', 'Failed to add property. Please try again.');
+    } finally {
+      this.addingProperty.set(false);
     }
   }
 
@@ -238,13 +274,17 @@ export class LandlordPropertiesComponent implements OnInit {
           image_url: imageUrl,
           amenities: this.parseAmenities(this.editingProperty.amenities),
           house_rules: this.editingProperty.house_rules?.trim() || null,
-          status: this.editingProperty.status
+          status: 'inactive',
+          approval_status: 'pending',
+          approval_remarks: null,
+          approved_at: null,
+          approved_by: null
         })
         .eq('id', propertyId);
 
       if (error) throw error;
 
-      this.toastService.success('Property updated successfully!');
+      this.toastService.success('Property changes submitted for admin review.');
       this.closeEditPropertyModal();
       await this.loadProperties();
     } catch (error) {
@@ -297,12 +337,17 @@ export class LandlordPropertiesComponent implements OnInit {
           room_number: this.newUnit.room_number.trim(),
           type: this.newUnit.type,
           capacity: this.newUnit.capacity,
-          monthly_rent: this.newUnit.monthly_rent
+          monthly_rent: this.newUnit.monthly_rent,
+          status: 'maintenance',
+          approval_status: 'pending',
+          approval_remarks: null,
+          approved_at: null,
+          approved_by: null
         });
 
       if (error) throw error;
 
-      this.toastService.success('Unit added successfully!');
+      this.toastService.success('Unit submitted for admin review.');
       this.closeAddUnitModal();
       await this.loadProperties();
     } catch (error) {
@@ -365,6 +410,19 @@ export class LandlordPropertiesComponent implements OnInit {
       .filter(Boolean);
 
     return parts.join(', ');
+  }
+
+  formatApprovalStatus(status?: 'pending' | 'approved' | 'rejected'): string {
+    if (!status) return 'Pending Review';
+    if (status === 'pending') return 'Pending Review';
+    if (status === 'approved') return 'Approved';
+    return 'Rejected';
+  }
+
+  getApprovalStatusClass(status?: 'pending' | 'approved' | 'rejected'): string {
+    if (status === 'approved') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    if (status === 'rejected') return 'border-rose-200 bg-rose-50 text-rose-700';
+    return 'border-amber-200 bg-amber-50 text-amber-700';
   }
 
   setViewMode(mode: 'table' | 'card') {
