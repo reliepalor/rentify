@@ -696,6 +696,7 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     const authIntent = sessionStorage.getItem('auth_intent') as 'login' | 'register' | null;
     const hasCallbackParam = new URL(window.location.href).searchParams.has(this.oauthCallbackParam);
     let postFinalizeModalMessage: string | null = null;
+    let shouldCleanupOAuthState = false;
 
     if ((!authIntent && !hasCallbackParam) || this.isHandlingOAuthCallback) {
       return;
@@ -713,6 +714,9 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
       if (!user) {
         return;
       }
+
+      // Only clear callback markers after we have a user and fully process navigation.
+      shouldCleanupOAuthState = true;
 
       if (authIntent === 'register') {
         const landlordDraft = this.getLandlordRegistrationDraft();
@@ -778,9 +782,11 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     } catch {
       this.modalService.error('Authentication Failed', 'Unable to complete Google sign in. Please try again.');
     } finally {
-      sessionStorage.removeItem('auth_intent');
-      sessionStorage.removeItem('selected_role');
-      this.cleanupOAuthCallbackParam();
+      if (shouldCleanupOAuthState) {
+        sessionStorage.removeItem('auth_intent');
+        sessionStorage.removeItem('selected_role');
+        this.cleanupOAuthCallbackParam();
+      }
       this.loadingService.hide();
       this.authLoading = false;
       this.isHandlingOAuthCallback = false;
