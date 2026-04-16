@@ -272,6 +272,30 @@ export class TenantHeaderComponent implements OnInit, OnDestroy {
     }
   }
 
+  async onLogout(): Promise<void> {
+    if (this.authLoading) {
+      return;
+    }
+
+    this.authLoading = true;
+
+    try {
+      const { error } = await this.supabaseService.client.auth.signOut();
+      if (error) {
+        throw error;
+      }
+
+      this.isLoggedIn = false;
+      this.closeAuthPanel();
+      this.toastService.success('Logged out successfully');
+      this.router.navigate(['/landing']);
+    } catch {
+      this.modalService.error('Logout Failed', 'Unable to log out right now. Please try again.');
+    } finally {
+      this.authLoading = false;
+    }
+  }
+
   openAuthPanel(mode: 'login' | 'register' = 'login'): void {
     this.authMode = mode;
     this.isAuthPanelMounted = true;

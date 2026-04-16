@@ -40,6 +40,16 @@
           </svg>
           <span class="text-sm">Profile</span>
         </button>
+
+        <button
+          *ngIf="isLoggedIn"
+          type="button"
+          (click)="onLogout()"
+          [disabled]="authLoading"
+          class="px-6 py-2 bg-stone-900/85 text-white rounded-lg hover:bg-stone-950 transition-all font-medium text-sm shadow-sm shadow-stone-950/25 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {{ authLoading ? 'Logging out...' : 'Logout' }}
+        </button>
         
         <button
           *ngIf="!isLoggedIn"
