@@ -1,5 +1,8 @@
 {
+  "version": 2,
   "outputDirectory": "dist/frontend/browser",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/(.*)",
