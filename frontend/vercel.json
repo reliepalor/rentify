@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "dist/frontend/browser",
+  "version": 2,
   "rewrites": [
     {
       "source": "/(.*)",
