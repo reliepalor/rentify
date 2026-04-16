@@ -1,11 +1,5 @@
 {
-  "version": 2,
-  "outputDirectory": "dist/frontend/browser",
-  "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
