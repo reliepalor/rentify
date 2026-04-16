@@ -1,0 +1,519 @@
+<app-header></app-header>
+
+<div
+  class="tenant-landingpage transition-all duration-700 ease-out"
+  [class.opacity-0]="!pageLoaded()"
+  [class.translate-y-2]="!pageLoaded()"
+  [class.opacity-100]="pageLoaded()"
+  [class.translate-y-0]="pageLoaded()"
+>
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Background Image with Overlay -->
+    <div class="absolute inset-0 z-0">
+      <img
+        src="/house.png"
+        alt="Boarding house exterior"
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 container mx-auto max-w-7xl px-6 md:px-10 pt-20 md:pt-32 pb-12 text-center">
+      <!-- Top Tag / Subtitle -->
+      <div class="inline-flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/30 px-6 py-2 text-xs md:text-sm font-medium tracking-[0.08em] uppercase text-white/95 mb-6 opacity-0 animate-[fadeInDown_0.8s_ease-out_forwards]">
+        FIND YOUR PERFECT ROOM
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="text-[2.65rem] md:text-[4.1rem] leading-[1.05] font-semibold text-white tracking-[-0.02em] mb-6 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.1s_forwards]">
+        Discover Verified<br>
+        <span class="text-emerald-300">Boarding Houses</span>
+      </h1>
+
+      <!-- Description -->
+      <p class="text-white/90 text-[1.05rem] md:text-[1.25rem] max-w-3xl mx-auto leading-relaxed mb-10 font-light opacity-0 animate-[fadeInUp_0.8s_ease-out_0.2s_forwards]">
+        Browse verified rooms with transparent pricing, direct owner contact, and verified listings all in one place.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]">
+        <button
+          (click)="exploreAccommodations()"
+          class="w-full sm:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-lg transition-all shadow-xl shadow-emerald-950/30 hover:scale-105 duration-300"
+        >
+          Browse Rooms
+        </button>
+
+        <button
+          (click)="learnMore()"
+          class="w-full sm:w-auto px-10 py-4 border border-white/70 hover:border-white text-white font-semibold rounded-lg text-lg backdrop-blur-sm transition-all hover:bg-white/10 duration-300"
+        >
+          Learn More
+        </button>
+      </div>
+
+      <!-- Search Box -->
+      <div class="max-w-4xl mx-auto bg-stone-50/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-stone-200/80 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.4s_forwards]">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Check-in -->
+          <div class="flex flex-col">
+            <label class="text-xs text-stone-500 uppercase tracking-wide mb-2 font-medium">
+              Start Date
+            </label>
+            <div class="relative">
+              <input
+                type="date"
+                [(ngModel)]="checkInDate"
+                class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 text-stone-700 bg-white transition-all"
+                placeholder="Select"
+              />
+            </div>
+          </div>
+
+          <!-- Check-out -->
+          <div class="flex flex-col">
+            <label class="text-xs text-stone-500 uppercase tracking-wide mb-2 font-medium">
+              End Date
+            </label>
+            <div class="relative">
+              <input
+                type="date"
+                [(ngModel)]="checkOutDate"
+                class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 text-stone-700 bg-white transition-all"
+                placeholder="Select"
+              />
+            </div>
+          </div>
+
+          <!-- Guests -->
+          <div class="flex flex-col">
+            <label class="text-xs text-stone-500 uppercase tracking-wide mb-2 font-medium">
+              Tenants
+            </label>
+            <div class="relative">
+              <select
+                [(ngModel)]="guests"
+                class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 text-stone-700 appearance-none bg-white transition-all"
+              >
+                <option [value]="1">1 Tenant</option>
+                <option [value]="2">2 Tenants</option>
+                <option [value]="3">3 Tenants</option>
+                <option [value]="4">4 Tenants</option>
+                <option [value]="5">5+ Tenants</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-stone-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Button -->
+          <div class="flex items-end">
+            <button
+              (click)="onSearch()"
+              class="w-full px-6 py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-all font-medium flex items-center justify-center space-x-2 shadow-md hover:shadow-lg hover:scale-105 duration-300"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Payment Options Section -->
+  <section id="payment-options" class="relative py-24 bg-white overflow-hidden" data-scroll-animate>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.10),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(20,184,166,0.10),transparent_40%)]"></div>
+    <div class="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-emerald-200/35 blur-3xl"></div>
+    <div class="pointer-events-none absolute -right-24 bottom-12 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-6 md:px-10">
+      <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <!-- Left Content -->
+        <div>
+          <p class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs md:text-sm font-semibold tracking-[0.08em] uppercase px-4 py-2 mb-6 opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]" data-scroll-animate>
+            Flexible Payment Methods
+          </p>
+
+          <h2 class="text-[2.4rem] md:text-[3.4rem] leading-[1.05] tracking-[-0.02em] font-semibold text-stone-900 mb-6 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.1s_forwards]" data-scroll-animate>
+            Pay Your Rent The
+            <span class="text-emerald-600">Way You Prefer</span>
+          </h2>
+
+          <p class="text-stone-600 text-[1.05rem] md:text-[1.2rem] leading-relaxed mb-8 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.2s_forwards]" data-scroll-animate>
+            Rentify supports digital payments and in-person options so tenants can choose what feels safest and most convenient.
+          </p>
+
+          <div class="space-y-4">
+            <div class="group rounded-2xl border border-emerald-100 bg-white/90 backdrop-blur-sm p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.25s_forwards]" data-scroll-animate>
+              <div class="flex items-start gap-4">
+                <div class="shrink-0 w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2M5 9h14l-1 11H6L5 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xl font-semibold text-stone-900">GCash</p>
+                  <p class="text-sm text-stone-600 mt-1">Fast mobile payments with instant confirmation and transaction reference tracking.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="group rounded-2xl border border-teal-100 bg-white/90 backdrop-blur-sm p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]" data-scroll-animate>
+              <div class="flex items-start gap-4">
+                <div class="shrink-0 w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.12-3 2.5S10.343 13 12 13s3 1.12 3 2.5S13.657 18 12 18m0-10V6m0 12v-2" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xl font-semibold text-stone-900">Maya</p>
+                  <p class="text-sm text-stone-600 mt-1">Secure e-wallet checkout with a smooth flow for recurring or monthly payments.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="group rounded-2xl border border-stone-200 bg-white/90 backdrop-blur-sm p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.35s_forwards]" data-scroll-animate>
+              <div class="flex items-start gap-4">
+                <div class="shrink-0 w-12 h-12 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2m-2 0h14v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xl font-semibold text-stone-900">On-Site Payment</p>
+                  <p class="text-sm text-stone-600 mt-1">Prefer cash or in-person settlement? Pay directly to your landlord and keep records in-app.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex flex-col sm:flex-row gap-3 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.4s_forwards]" data-scroll-animate>
+            <button
+              type="button"
+              (click)="openPaymentPreferenceModal()"
+              class="px-6 py-3 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-900/20 hover:-translate-y-0.5"
+            >
+              Set Preferred Method
+            </button>
+            <button
+              type="button"
+              (click)="openPaymentPreferenceModal()"
+              class="px-6 py-3 rounded-xl border border-stone-300 bg-white text-stone-800 font-semibold hover:border-emerald-400 hover:text-emerald-700 transition-all"
+            >
+              Compare Methods
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Visual -->
+        <div class="relative opacity-0 animate-[fadeInUp_0.8s_ease-out_0.2s_forwards]" data-scroll-animate>
+          <div class="absolute -top-6 -right-6 w-40 h-40 bg-emerald-200/45 blur-3xl rounded-full"></div>
+
+          <div class="relative rounded-3xl overflow-hidden border border-stone-200/70 shadow-2xl bg-stone-900 ring-1 ring-white/10">
+            <img
+              src="/house.png"
+              alt="Tenant payment options preview"
+              class="h-[430px] w-full object-cover opacity-80"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/50 to-transparent"></div>
+
+            <div class="absolute inset-x-0 bottom-0 p-6 md:p-8">
+              <p class="text-emerald-300 text-xs uppercase tracking-[0.12em] font-semibold mb-3">Smart Billing Experience</p>
+              <h3 class="text-2xl md:text-3xl font-semibold text-white leading-tight mb-3">
+                One Dashboard.<br />
+                Multiple Ways To Pay.
+              </h3>
+              <p class="text-stone-200 text-sm md:text-base leading-relaxed">
+                Choose digital wallets or in-person settlement while keeping transparent payment history.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-3 gap-3">
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50/90 backdrop-blur-sm px-4 py-3 text-center shadow-sm">
+              <p class="text-[11px] uppercase tracking-wider text-emerald-700 font-semibold">Method</p>
+              <p class="text-sm font-semibold text-emerald-900 mt-1">GCash</p>
+            </div>
+            <div class="rounded-xl border border-teal-200 bg-teal-50/90 backdrop-blur-sm px-4 py-3 text-center shadow-sm">
+              <p class="text-[11px] uppercase tracking-wider text-teal-700 font-semibold">Method</p>
+              <p class="text-sm font-semibold text-teal-900 mt-1">Maya</p>
+            </div>
+            <div class="rounded-xl border border-stone-200 bg-stone-100/90 backdrop-blur-sm px-4 py-3 text-center shadow-sm">
+              <p class="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">Method</p>
+              <p class="text-sm font-semibold text-stone-900 mt-1">Cash</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Properties/Units Section -->
+  <section id="properties-section" class="py-24 bg-stone-50" data-scroll-animate>
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
+      <!-- Section Header -->
+      <div class="text-center mb-12">
+        <h2 class="text-4xl md:text-5xl font-semibold text-stone-900 mb-4 opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]" data-scroll-animate>
+          Featured <span class="text-emerald-600">Listings</span>
+        </h2>
+        <p class="text-lg text-stone-600 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.1s_forwards]" data-scroll-animate>
+          Explore verified boarding houses and available rooms
+        </p>
+      </div>
+
+      <!-- View Toggle -->
+      <div class="flex justify-center gap-3 mb-8">
+        <button
+          (click)="setActiveView('properties')"
+          [class.active]="activeView() === 'properties'"
+          class="px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+          [ngClass]="{
+            'bg-emerald-600 text-white shadow-lg': activeView() === 'properties',
+            'bg-white text-stone-700 hover:bg-stone-100': activeView() !== 'properties'
+          }"
+        >
+          Properties
+        </button>
+        <button
+          (click)="setActiveView('units')"
+          [class.active]="activeView() === 'units'"
+          class="px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+          [ngClass]="{
+            'bg-emerald-600 text-white shadow-lg': activeView() === 'units',
+            'bg-white text-stone-700 hover:bg-stone-100': activeView() !== 'units'
+          }"
+        >
+          Available Rooms
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-2xl p-6 mb-8 border border-stone-200 shadow-sm opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]" data-scroll-animate>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-stone-700 mb-2">Search</label>
+            <input
+              type="text"
+              [value]="searchQuery()"
+              (input)="searchQuery.set($any($event.target).value)"
+              placeholder="Search by name or location..."
+              class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-stone-700 mb-2">Location</label>
+            <input
+              type="text"
+              [value]="filterLocation()"
+              (input)="filterLocation.set($any($event.target).value)"
+              placeholder="City or barangay..."
+              class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-stone-700 mb-2">Max Price</label>
+            <input
+              type="number"
+              [value]="filterMaxPrice()"
+              (input)="onMaxPriceChange($event)"
+              placeholder="₱ 0"
+              class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div class="flex items-end">
+            <button
+              (click)="clearFilters()"
+              class="w-full px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-semibold transition-all"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="text-center py-12">
+        <div class="inline-block">
+          <div class="w-12 h-12 border-4 border-stone-300 border-t-emerald-600 rounded-full animate-spin"></div>
+        </div>
+        <p class="text-stone-600 mt-4">Loading listings...</p>
+      </div>
+
+      <!-- Properties Grid -->
+      <div *ngIf="!loading() && activeView() === 'properties'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          *ngFor="let property of filteredProperties(); let i = index"
+          class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]"
+          data-scroll-animate
+          [style.animation-delay]="i * 50 + 'ms'"
+        >
+          <!-- Image Container -->
+          <div class="relative h-64 overflow-hidden bg-gradient-to-br from-stone-200 to-stone-300">
+            <img
+              *ngIf="property.image_url"
+              [src]="property.image_url"
+              [alt]="property.name"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <div *ngIf="!property.image_url" class="w-full h-full flex items-center justify-center">
+              <svg class="w-16 h-16 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 0118 0m0 0a9 9 0 01-18 0m18 0a9 9 0 01-18 0" />
+              </svg>
+            </div>
+            <!-- Badge -->
+            <div class="absolute top-4 right-4 bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              {{ property.units?.length || 0 }} Rooms
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-stone-900 mb-1 group-hover:text-emerald-600 transition-colors">
+              {{ property.name }}
+            </h3>
+            <p class="text-sm text-stone-600 mb-3">{{ getPropertyLocation(property) }}</p>
+
+            <!-- Price -->
+            <div class="mb-4">
+              <p class="text-sm text-stone-600">Starting from</p>
+              <p class="text-2xl font-bold text-emerald-600">₱{{ getMinUnitPrice(property) | number }}</p>
+            </div>
+
+            <!-- Description -->
+            <p class="text-sm text-stone-600 mb-4 line-clamp-2">
+              {{ property.description || 'No description available' }}
+            </p>
+
+            <!-- Amenities -->
+            <div *ngIf="formatAmenities(property.amenities).length > 0" class="mb-4">
+              <p class="text-xs font-semibold text-stone-700 mb-2">Amenities</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  *ngFor="let amenity of formatAmenities(property.amenities)"
+                  class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs"
+                >
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.285 2l-11.285 11.567-5.556-5.558L0 9.99l8.824 8.999L24 5.272z" />
+                  </svg>
+                  {{ amenity }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <button
+              [routerLink]="['/tenant-property', property.id]"
+              class="w-full mt-6 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-all hover:scale-105 duration-300 flex items-center justify-center gap-2"
+            >
+              View Details
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredProperties().length === 0" class="col-span-full text-center py-12">
+          <svg class="w-16 h-16 text-stone-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+          </svg>
+          <p class="text-stone-600">No properties found. Try adjusting your filters.</p>
+        </div>
+      </div>
+
+      <!-- Units Grid -->
+      <div *ngIf="!loading() && activeView() === 'units'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          *ngFor="let unit of filteredUnits(); let i = index"
+          class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]"
+          data-scroll-animate
+          [style.animation-delay]="i * 50 + 'ms'"
+        >
+          <!-- Image Container -->
+          <div class="relative h-64 overflow-hidden bg-gradient-to-br from-emerald-200 to-emerald-300">
+            <div
+              class="w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500"
+            >
+              <div class="text-center">
+                <svg class="w-20 h-20 text-emerald-700 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <p class="text-emerald-900 font-semibold">Room {{ unit.room_number }}</p>
+              </div>
+            </div>
+            <!-- Badge -->
+            <div class="absolute top-4 right-4 bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              {{ unit.type | titlecase }}
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-stone-900 mb-1 group-hover:text-emerald-600 transition-colors">
+              Room {{ unit.room_number }}
+            </h3>
+            <p class="text-sm text-stone-600 mb-3">
+              {{ properties().find(p => p.id === unit.property_id)?.name || 'Property' }}
+            </p>
+
+            <!-- Status -->
+            <div class="mb-4">
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                [ngClass]="{
+                  'bg-emerald-100 text-emerald-700': unit.status === 'available',
+                  'bg-orange-100 text-orange-700': unit.status === 'occupied',
+                  'bg-stone-100 text-stone-700': unit.status === 'maintenance'
+                }"
+              >
+                {{ unit.status | titlecase }}
+              </span>
+            </div>
+
+            <!-- Details -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="bg-stone-50 p-3 rounded-lg">
+                <p class="text-xs text-stone-600 mb-1">Capacity</p>
+                <p class="text-lg font-bold text-emerald-600">{{ unit.capacity }}</p>
+              </div>
+              <div class="bg-stone-50 p-3 rounded-lg">
+                <p class="text-xs text-stone-600 mb-1">Monthly Rent</p>
+                <p class="text-lg font-bold text-emerald-600">₱{{ unit.monthly_rent | number }}</p>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <button
+              class="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-all hover:scale-105 duration-300 flex items-center justify-center gap-2"
+            >
+              Apply Now
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredUnits().length === 0" class="col-span-full text-center py-12">
+          <svg class="w-16 h-16 text-stone-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+          </svg>
+          <p class="text-stone-600">No rooms found. Try adjusting your filters.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Footer -->
+<app-tenant-footer></app-tenant-footer>

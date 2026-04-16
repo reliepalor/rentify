@@ -116,6 +116,9 @@
               Landlord
             </button>
           </div>
+          <p *ngIf="selectedRole === 'landlord'" class="mt-3 text-xs text-amber-700">
+            Landlord registration requires verification documents before account creation.
+          </p>
         </div>
 
         <!-- Register Button -->
@@ -123,7 +126,7 @@
           type="submit"
           [disabled]="loading"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3.5 rounded-2xl transition-all duration-200">
-          {{ loading ? 'Creating Account...' : 'Create Account' }}
+          {{ loading ? 'Creating Account...' : (selectedRole === 'landlord' ? 'Submit Landlord Application' : 'Create Account') }}
         </button>
       </form>
 
@@ -138,6 +141,87 @@
 
     <div class="text-center mt-6">
       <a routerLink="/" class="text-gray-500 hover:text-gray-700 text-sm">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showLandlordModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+  <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Landlord Verification Details</h2>
+        <p class="mt-1 text-sm text-gray-600">
+          Upload the required documents so the admin can verify your landlord account.
+        </p>
+      </div>
+      <button type="button" (click)="closeLandlordModal()" class="text-gray-400 hover:text-gray-700" aria-label="Close landlord verification form">
+        ✕
+      </button>
+    </div>
+
+    <div class="mt-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <input
+          type="text"
+          [(ngModel)]="landlordFullName"
+          name="landlordFullName"
+          class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Juan Dela Cruz"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+        <input
+          type="text"
+          [(ngModel)]="landlordContactNumber"
+          name="landlordContactNumber"
+          class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="09xxxxxxxxx"
+        />
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Business Permit</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'business_permit')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.business_permit || 'No file selected' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Barangay Clearance</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'barangay_clearance')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.barangay_clearance || 'No file selected' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Valid ID</label>
+          <input type="file" accept="image/*,application/pdf" (change)="onLandlordDocumentSelected($event, 'valid_id')" class="w-full text-sm" />
+          <p class="mt-2 text-xs text-gray-500">{{ landlordDocumentNames.valid_id || 'No file selected' }}</p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-blue-50 p-4 text-sm text-blue-800">
+        The uploaded files will be stored in Database and linked to your landlord application for Admin review.
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        (click)="closeLandlordModal()"
+        class="rounded-2xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="saveLandlordVerificationDetails()"
+        class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+      >
+        Save Verification Details
+      </button>
     </div>
   </div>
 </div>
