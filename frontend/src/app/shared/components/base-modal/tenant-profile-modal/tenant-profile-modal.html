@@ -1,0 +1,113 @@
+
+<main class="flex-1 px-6 md:px-12 py-10 max-w-5xl mx-auto w-full">
+        <div class="mb-8">
+<!-- <h1 class="text-4xl font-extrabold text-on-background tracking-tight mb-2">Edit Profile</h1> -->
+<nav class="text-md mb-2">
+  <ol class="flex items-center gap-2 text-gray-500">
+    <li>
+      <a routerLink="/dashboard" class="hover:text-blue-600">Home</a>
+    </li>
+    <li>&gt;</li>
+    <li class="text-gray-700 font-medium">Account</li>
+  </ol>
+</nav>
+
+<!-- <p class="text-on-surface-variant font-label text-sm uppercase tracking-widest font-semibold">
+  Account Management
+</p> -->
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Profile Picture Section -->
+<section class="md:col-span-4 space-y-6">
+<div class="bg-surface-container-low rounded-lg p-8 flex flex-col items-center text-center">
+<div class="relative group cursor-pointer">
+<div class="w-40 h-40 rounded-full overflow-hidden border-4 border-surface-container-lowest shadow-sm mb-4">
+<img alt="Alex Sterling Profile" class="w-full h-full object-cover" data-alt="High-resolution portrait of a man in natural sunlight, emphasizing clear skin and professional demeanor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE1ceWDX4ySy3uWx_HnygEsYCvuRnUWPhyW7v-cfcH439gXtwek1IBURQK5_ljNWfCQuTGU-43PPUkHrTeuCvj76DybllLSGZqKXQrM41Xci6IrrNsDain7kM-6DjMQ6J9zA_48805a36oOrZ-gRcryPqaLCZjnW74EnX2oTMZZb9oO_5iZCqPwa5Y3hYdZaHvTPL6mdXu-7IBbUF6OCe-7usuA3q_XznwMozjBnWM1lnykyi1xUdyhlFRk2lSxZMhvMUOXqi0qDjb"/>
+</div>
+<div class="absolute inset-0 bg-primary/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+</div>
+</div>
+<h3 class="font-bold text-lg text-on-surface">Alex Sterling</h3>
+<p class="text-on-surface-variant text-sm mb-6">PNG, JPG up to 10MB</p>
+<button class="text-primary font-bold text-sm px-6 py-2 rounded-full border border-outline-variant/40 hover:bg-primary/5 transition-colors">
+              Upload New
+            </button>
+</div>
+<div class="bg-surface-container-low rounded-lg p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-xs font-label font-semibold">Created</span>
+<span class="text-on-surface text-xs font-medium">Oct 2022</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-xs font-label font-semibold">Last Edited</span>
+<span class="text-on-surface text-xs font-medium">Aug 2024</span>
+</div>
+</div>
+</section>
+<!-- Form Section -->
+<section class="md:col-span-8 bg-surface-container-lowest rounded-lg p-8 md:p-12 shadow-[0_32px_64px_rgba(23,29,26,0.02)]">
+<form class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Full Name -->
+<div class="space-y-2">
+<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Full Name</label>
+<input class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-full px-6 py-4 text-on-surface font-medium transition-all placeholder:text-outline-variant" type="text" value="Alex Sterling"/>
+</div>
+<!-- Contact Number -->
+<div class="space-y-2">
+<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Contact Number</label>
+<input class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-full px-6 py-4 text-on-surface font-medium transition-all placeholder:text-outline-variant" type="tel" value="+1 (555) 012-3456"/>
+</div>
+</div>
+<!-- Email (Read Only Styled) -->
+<div class="space-y-2 opacity-70">
+<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email Address (Managed by Admin)</label>
+<div class="w-full bg-surface-container-low rounded-full px-6 py-4 text-on-surface font-medium flex items-center justify-between">
+<span>alex.sterling@premium.com</span>
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+</div>
+<!-- Address -->
+<div class="space-y-2">
+<label class="block text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider ml-1">Address</label>
+<textarea class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-lg px-6 py-4 text-on-surface font-medium transition-all placeholder:text-outline-variant resize-none" rows="3">High-Rise Gardens, Apt 402, 1288 Emerald District, San Francisco, CA 94105</textarea>
+</div>
+<!-- Preference Toggle (Extra Polish) -->
+<!-- <div class="pt-4 border-t border-outline-variant/10">
+<div class="flex items-center justify-between p-4 bg-secondary-container/20 rounded-lg">
+
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<div>
+<p class="text-sm font-bold text-primary">Two-Factor Authentication</p>
+<p class="text-xs text-on-secondary-container">Keep your account secure</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-primary rounded-full relative">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+</div> -->
+<!-- Action Buttons -->
+<div class="flex items-center justify-end space-x-4 pt-6">
+<button class="px-8 py-4 text-on-surface-variant font-bold text-sm hover:text-primary transition-colors" 
+(click)="closeEdit()">
+                Discard
+              </button>
+
+                <!-- <button
+      class="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+      (click)="closeEdit()"
+    >
+      Close
+    </button> -->
+<button class="px-10 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all" type="submit">
+                Save Changes
+              </button>
+</div>
+</form>
+</section>
+</div>
+</main>

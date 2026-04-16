@@ -1,0 +1,250 @@
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Initial state: Hidden until animation starts */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* Staggered Entrance Delays */
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+</style>
+
+<section class="py-32 max-w-7xl mx-auto px-6 font-body">
+
+    <div class="text-center mb-20 animate-fade-in-up">
+        <h2 class="text-4xl font-extrabold tracking-tight mb-4 font-headline text-on-surface">
+            Featured Boarding Houses in Gonzaga
+        </h2>
+        <p class="text-on-surface-variant font-medium max-w-lg mx-auto font-label">
+            Find the perfect stay near Rizal St, Fort Baclig, and across the beautiful municipality of Gonzaga.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+
+        <div class="group animate-fade-in-up delay-1">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1555854817-5b2738a77fd5?auto=format&fit=crop&q=80&w=800" 
+                     alt="Zeke Boarding House"/>
+                <div class="absolute top-4 left-4 flex gap-2">
+                    <span class="bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase text-primary border border-primary/10">
+                        Eatery Included
+                    </span>
+                </div>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold text-on-surface font-headline leading-tight">
+                        Zeke Boarding House and Eatery
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline whitespace-nowrap">
+                        ₱3,500 <span class="text-xs text-on-surface-variant font-normal font-label">/mo</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Rizal St, Gonzaga, Cagayan
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">restaurant</span> Meals
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">wifi</span> Free Fiber
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="group animate-fade-in-up delay-2">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=800" 
+                     alt="Lopez Boarding House"/>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-on-surface font-headline">
+                        LOPEZ BOARDING House
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline">
+                        ₱2,800 <span class="text-xs text-on-surface-variant font-normal font-label">/mo</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Gonzaga, Cagayan
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">bed</span> 1 Bed
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">local_laundry_service</span> Shared Laundry
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="group animate-fade-in-up delay-3">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800" 
+                     alt="Baclig Boarding House"/>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-on-surface font-headline">
+                        Baclig Boarding House
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline">
+                        ₱3,200 <span class="text-xs text-on-surface-variant font-normal font-label">/mo</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Fort Baclig St, Gonzaga
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">security</span> Secured
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">bolt</span> Sub-meter
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="group animate-fade-in-up delay-4">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1512918766671-560071d63222?auto=format&fit=crop&q=80&w=800" 
+                     alt="Imperio's Board and Lodging"/>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold text-on-surface font-headline leading-tight">
+                        Imperio's Board and Lodging
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline whitespace-nowrap">
+                        ₱4,000 <span class="text-xs text-on-surface-variant font-normal font-label">/mo</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Mabini St, Progressive, Gonzaga
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">home</span> Lodging
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">ac_unit</span> Aircon Opt.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="group animate-fade-in-up delay-5">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&q=80&w=800" 
+                     alt="GS Transient Inn"/>
+                <div class="absolute top-4 left-4">
+                    <span class="bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase shadow-sm">
+                        Grocery On-site
+                    </span>
+                </div>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-on-surface font-headline">
+                        GS TRANSIENT INN
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline">
+                        ₱1,200 <span class="text-xs text-on-surface-variant font-normal font-label">/day</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Purok 3 Ricardo Ipin Deza St, Gonzaga
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">shopping_cart</span> Grocery
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">shower</span> Hot Water
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="group animate-fade-in-up delay-6">
+            <div class="rounded-lg overflow-hidden aspect-[4/3] mb-6 relative">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800" 
+                     alt="Blanchezka Transient House"/>
+                <button class="absolute bottom-4 right-4 bg-surface-container-lowest text-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+            </div>
+            <div class="space-y-2 transform transition-all duration-300 group-hover:-translate-y-1">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-on-surface font-headline">
+                        Blanchezka Transient
+                    </h3>
+                    <p class="font-extrabold text-xl text-primary font-headline">
+                        ₱1,500 <span class="text-xs text-on-surface-variant font-normal font-label">/day</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-sm font-label">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    Batangan, Gonzaga
+                </div>
+                <div class="flex gap-4 pt-3">
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">groups</span> Family Room
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-semibold font-label text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-md">
+                        <span class="material-symbols-outlined text-base">park</span> Garden
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
